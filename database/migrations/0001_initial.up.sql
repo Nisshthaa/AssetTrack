@@ -40,17 +40,21 @@ CREATE TYPE connection_type AS ENUM (
 
 CREATE TABLE IF NOT EXISTS users
 (
-    user_id     UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
-    name        TEXT        NOT NULL,
-    email       TEXT UNIQUE NOT NULL,
+    user_id     UUID PRIMARY KEY   DEFAULT gen_random_uuid(),
+    name        TEXT      NOT NULL,
+    email       TEXT      NOT NULL,
     phone_no    TEXT,
-    role        user_role            DEFAULT 'employee',
-    type        user_type   NOT NULL DEFAULT 'full-time',
-    password    TEXT        NOT NULL,
-    created_at  TIMESTAMP            DEFAULT CURRENT_TIMESTAMP,
+    role        user_role          DEFAULT 'employee',
+    type        user_type NOT NULL DEFAULT 'full-time',
+    password    TEXT      NOT NULL,
+    created_at  TIMESTAMP          DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP,
     archived_at TIMESTAMPTZ
 );
+
+CREATE UNIQUE INDEX idx_user_email
+    ON users (email)
+    WHERE archived_at IS NULL;
 
 CREATE TABLE IF NOT EXISTS assets
 (
@@ -117,6 +121,12 @@ CREATE TABLE asset_assignments
     updated_at    TIMESTAMPTZ,
     archived_at   TIMESTAMPTZ
 );
+
+CREATE UNIQUE INDEX idx_active_assignment
+    ON asset_assignments (asset_id)
+    WHERE returned_at IS NULL
+        AND archived_at IS NULL;
+
 CREATE TABLE asset_repairs
 (
     repair_id           UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
@@ -127,4 +137,10 @@ CREATE TABLE asset_repairs
     updated_at          TIMESTAMPTZ,
     archived_at         TIMESTAMPTZ
 );
+
+CREATE UNIQUE INDEX idx_active_repair
+    ON asset_repairs (asset_id)
+    WHERE repair_completed_on IS NULL
+        AND archived_at IS NULL;
+
 COMMIT;
