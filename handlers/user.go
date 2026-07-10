@@ -60,3 +60,43 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		Token:   token,
 	})
 }
+
+func LoginUser(w http.ResponseWriter, r *http.Request) {
+	var body models.LoginUser
+
+	if parseErr := utils.ParseBody(r, &body); parseErr != nil {
+		utils.RespondError(w, http.StatusBadRequest, parseErr, "failed to parse request body")
+		return
+	}
+
+	v := validator.New()
+	if err := v.Struct(body); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err, "input validation failed")
+		return
+	}
+
+	userID, userErr := dbHelper.GetUserIDByPassword(body.Email, body.Password)
+	if userErr != nil {
+		utils.RespondError(w, http.StatusInternalServerError, userErr, "failed to find user")
+		return
+	}
+
+	if userID == "" {
+		utils.RespondError(w, http.StatusBadRequest, nil, "user not found")
+		return
+	}
+
+	token, tokenErr := utils.GenerateJWT(userID)
+	if tokenErr != nil {
+		utils.RespondError(w, http.StatusInternalServerError, tokenErr, "failed to generate token")
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, struct {
+		Message string `json:"message"`
+		Token   string `json:"token"`
+	}{
+		Message: "User logged in successfully",
+		Token:   token,
+	})
+}

@@ -8,3 +8,13 @@ type RegisterUser struct {
 	PhoneNumber string `json:"phoneNumber" db:"phone_number" validate:"required,len=10"`
 	Password    string `json:"password" db:"password" validate:"required,min=8,max=20"`
 }
+
+type LoginUser struct {
+	Email    string `json:"email" db:"email" validate:"email"`
+	Password string `json:"password" db:"password" validate:"required,alphanum,min=8,max=20"`
+}
+
+type LoginData struct {
+	UserID       string `db:"user_id"`
+	PasswordHash string `db:"password"`
+}

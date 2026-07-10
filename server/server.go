@@ -22,6 +22,7 @@ func SetUpRoutes() *Server {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("POST /v1/register", handlers.RegisterUser)
+	mux.HandleFunc("POST /v1/login", handlers.LoginUser)
 
 	return &Server{
 		router: mux,
