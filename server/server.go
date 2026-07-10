@@ -1,6 +1,7 @@
 package server
 
 import (
+	"AssetTrack/handlers"
 	"context"
 	"net/http"
 	"time"
@@ -8,6 +9,7 @@ import (
 
 type Server struct {
 	server *http.Server
+	router http.Handler
 }
 
 const (
@@ -16,9 +18,20 @@ const (
 	writeTimeout      = 5 * time.Minute
 )
 
+func SetUpRoutes() *Server {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("POST /v1/register", handlers.RegisterUser)
+
+	return &Server{
+		router: mux,
+	}
+}
+
 func (s *Server) Run(port string) error {
 	s.server = &http.Server{
 		Addr:              port,
+		Handler:           s.router,
 		ReadTimeout:       readTimeout,
 		ReadHeaderTimeout: readHeaderTimeout,
 		WriteTimeout:      writeTimeout,

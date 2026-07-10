@@ -19,7 +19,7 @@ func main() {
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	srv := &server.Server{}
+	srv := server.SetUpRoutes()
 
 	if err := database.Connect(
 		os.Getenv("DB_HOST"),
