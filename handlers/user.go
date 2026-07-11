@@ -3,6 +3,7 @@ package handlers
 import (
 	"AssetTrack/database"
 	"AssetTrack/database/dbHelper"
+	"AssetTrack/middlewares"
 	"AssetTrack/models"
 	"AssetTrack/utils"
 	"net/http"
@@ -99,4 +100,15 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		Message: "User logged in successfully",
 		Token:   token,
 	})
+}
+
+func GetUser(w http.ResponseWriter, r *http.Request) {
+	userID := middlewares.UserContext(r)
+
+	user, getErr := dbHelper.GetUser(userID)
+	if getErr != nil {
+		utils.RespondError(w, http.StatusInternalServerError, getErr, "failed to get user")
+		return
+	}
+	utils.RespondJSON(w, http.StatusOK, user)
 }

@@ -2,6 +2,7 @@ package server
 
 import (
 	"AssetTrack/handlers"
+	"AssetTrack/middlewares"
 	"context"
 	"net/http"
 	"time"
@@ -18,11 +19,17 @@ const (
 	writeTimeout      = 5 * time.Minute
 )
 
+func protected(h http.HandlerFunc) http.Handler {
+	return middlewares.Authenticate(h)
+}
+
 func SetUpRoutes() *Server {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("POST /v1/register", handlers.RegisterUser)
 	mux.HandleFunc("POST /v1/login", handlers.LoginUser)
+
+	mux.Handle("GET /v1/profile", protected(handlers.GetUser))
 
 	return &Server{
 		router: mux,

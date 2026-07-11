@@ -50,3 +50,14 @@ func GetUserIDByPassword(email, password string) (string, error) {
 	}
 	return user.UserID, nil
 }
+
+func GetUser(userID string) (models.User, error) {
+	var user models.User
+	SQL := `SELECT user_id, name, email , phone_no, role, type
+              FROM users 
+              WHERE user_id = $1
+                AND archived_at IS NULL`
+
+	getErr := database.DB.Get(&user, SQL, userID)
+	return user, getErr
+}

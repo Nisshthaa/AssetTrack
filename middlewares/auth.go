@@ -54,7 +54,7 @@ func Authenticate(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
-func UserContext(r *http.Request) (string, bool) {
-	userID, ok := r.Context().Value(userContext).(string)
-	return userID, ok
+func UserContext(r *http.Request) string {
+	userID := r.Context().Value(userContext).(string)
+	return userID
 }
