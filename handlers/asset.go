@@ -28,3 +28,26 @@ func CreateAsset(w http.ResponseWriter, r *http.Request) {
 		Message: "asset created successfully",
 	})
 }
+
+func GetAssets(w http.ResponseWriter, r *http.Request) {
+
+	response := services.GetAssets()
+
+	if response.Err != nil {
+		utils.RespondError(
+			w,
+			response.StatusCode,
+			response.Err,
+			"failed to fetch assets",
+		)
+		return
+	}
+
+	utils.RespondJSON(w, response.StatusCode, struct {
+		Message string      `json:"message"`
+		Data    interface{} `json:"data"`
+	}{
+		Message: "assets fetched successfully",
+		Data:    response.Data,
+	})
+}

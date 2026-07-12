@@ -16,6 +16,19 @@ type AssetRequest struct {
 	Mouse         MouseSpecsRequest    `json:"mouseSpecs,omitempty"`
 	Mobile        MobileSpecsRequest   `json:"mobileSpecs,omitempty"`
 }
+
+type AssetDetails struct {
+	AssetID       string    `json:"assetID" db:"asset_id"`
+	SerialNumber  string    `json:"serialNumber" db:"serial_number"`
+	Brand         string    `json:"brand" db:"brand"`
+	Model         string    `json:"model" db:"model"`
+	AssetType     string    `json:"assetType" db:"asset_type"`
+	Status        string    `json:"status" db:"status"`
+	OwnerType     string    `json:"owner" db:"owner_type"`
+	AssignedTo    string    `json:"assignedTo" db:"assigned_to"`
+	WarrantyStart time.Time `json:"warrantyStart" db:"warranty_start" `
+	WarrantyEnd   time.Time `json:"warrantyEnd" db:"warranty_end"`
+}
 type LaptopSpecsRequest struct {
 	Processor       string `json:"processor"`
 	Ram             string `json:"ram" `

@@ -65,3 +65,16 @@ func CreateAsset(body models.AssetRequest) *models.ServiceResponse {
 
 	return utils.ServiceSuccess(nil, http.StatusCreated)
 }
+
+func GetAssets() *models.ServiceResponse {
+	assets, getErr := repository.GetAssets()
+	if getErr != nil {
+		return utils.ServiceError(
+			getErr,
+			http.StatusInternalServerError,
+			"failed to get assets",
+		)
+	}
+
+	return utils.ServiceSuccess(assets, http.StatusOK)
+}

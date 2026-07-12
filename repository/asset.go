@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"AssetTrack/database"
 	"AssetTrack/models"
 
 	"github.com/jmoiron/sqlx"
@@ -57,4 +58,36 @@ func CreateMobileSpecs(tx *sqlx.Tx, assetID string, body models.MobileSpecsReque
 	_, err := tx.Exec(SQL, assetID, body.Ram, body.Storage, body.OperatingSystem, body.Charger)
 
 	return err
+}
+
+func GetAssets() ([]models.AssetDetails, error) {
+	var assets []models.AssetDetails
+
+	SQL := `
+		SELECT
+			a.asset_id,
+			a.serial_number,
+			a.brand,
+			a.model,
+			a.asset_type,
+			a.status,
+			a.owner_type,
+			COALESCE(u.name, '') AS assigned_to,
+			a.warranty_start,
+			a.warranty_end
+		FROM assets a
+		LEFT JOIN asset_assignments aa
+			ON aa.asset_id = a.asset_id
+			AND aa.returned_at IS NULL
+			AND aa.archived_at IS NULL
+		LEFT JOIN users u
+			ON u.user_id = aa.assigned_to
+			AND u.archived_at IS NULL
+		WHERE a.archived_at IS NULL
+		ORDER BY a.created_at DESC;
+	`
+
+	err := database.DB.Select(&assets, SQL)
+
+	return assets, err
 }
