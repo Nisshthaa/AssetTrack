@@ -70,8 +70,8 @@ func GenerateJWT(userID string) (string, error) {
 	return token.SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
 }
 
-func newServiceResponse(data any, err error, statusCode int, message string) *models.ServiceResponse {
-	return &models.ServiceResponse{
+func newServiceResponse(data any, err error, statusCode int, message string) models.ServiceResponse {
+	return models.ServiceResponse{
 		Data:       data,
 		StatusCode: statusCode,
 		Err:        err,
@@ -79,11 +79,11 @@ func newServiceResponse(data any, err error, statusCode int, message string) *mo
 	}
 }
 
-func ServiceError(err error, statusCode int, message string) *models.ServiceResponse {
+func ServiceError(err error, statusCode int, message string) models.ServiceResponse {
 	log.Printf("status: %d, message: %s, err: %+v", statusCode, message, err)
 	return newServiceResponse(nil, err, statusCode, message)
 }
 
-func ServiceSuccess(data interface{}, statusCode int) *models.ServiceResponse {
+func ServiceSuccess(data interface{}, statusCode int) models.ServiceResponse {
 	return newServiceResponse(data, nil, statusCode, "")
 }

@@ -5,6 +5,8 @@ import (
 	"AssetTrack/models"
 	"AssetTrack/repository"
 	"AssetTrack/utils"
+	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -12,7 +14,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func CreateAsset(body models.AssetRequest) *models.ServiceResponse {
+func CreateAsset(body models.AssetRequest) models.ServiceResponse {
 
 	v := validator.New()
 	if err := v.Struct(body); err != nil {
@@ -66,7 +68,7 @@ func CreateAsset(body models.AssetRequest) *models.ServiceResponse {
 	return utils.ServiceSuccess(nil, http.StatusCreated)
 }
 
-func GetAssets() *models.ServiceResponse {
+func GetAssets() models.ServiceResponse {
 	assets, getErr := repository.GetAssets()
 	if getErr != nil {
 		return utils.ServiceError(
@@ -77,4 +79,18 @@ func GetAssets() *models.ServiceResponse {
 	}
 
 	return utils.ServiceSuccess(assets, http.StatusOK)
+}
+
+func GetAssetByID(assetID string) models.ServiceResponse {
+	asset, err := repository.GetAssetByID(assetID)
+	if err != nil {
+
+		if errors.Is(err, sql.ErrNoRows) {
+			return utils.ServiceError(err, http.StatusNotFound, "asset not found")
+		}
+
+		return utils.ServiceError(err, http.StatusInternalServerError, "failed to get asset")
+	}
+
+	return utils.ServiceSuccess(asset, http.StatusOK)
 }
