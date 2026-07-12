@@ -83,3 +83,12 @@ func GetUser(userID string) (*models.User, int, error) {
 
 	return user, http.StatusOK, nil
 }
+
+func DeleteUser(userID string) (int, error) {
+	err := repository.DeleteUser(userID)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	return http.StatusOK, nil
+}

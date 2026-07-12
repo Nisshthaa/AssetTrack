@@ -66,6 +66,6 @@ func DeleteUser(userID string) error {
 			  WHERE user_id = $1
 			    AND archived_at IS NULL`
 
-	_, err := database.DB.Exec(SQL, userID)
-	return err
+	_, delErr := database.DB.Exec(SQL, userID)
+	return delErr
 }

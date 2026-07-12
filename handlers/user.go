@@ -3,7 +3,6 @@ package handlers
 import (
 	"AssetTrack/middlewares"
 	"AssetTrack/models"
-	"AssetTrack/repository"
 	services "AssetTrack/service"
 	"AssetTrack/utils"
 	"net/http"
@@ -12,8 +11,8 @@ import (
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	var body models.RegisterUser
 
-	if err := utils.ParseBody(r, &body); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, err, "invalid request body")
+	if parseErr := utils.ParseBody(r, &body); parseErr != nil {
+		utils.RespondError(w, http.StatusBadRequest, parseErr, "invalid request body")
 		return
 	}
 
@@ -78,6 +77,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 	utils.RespondJSON(w, status, user)
 }
+
 func LogoutUser(w http.ResponseWriter, r *http.Request) {
 
 	utils.RespondJSON(w, http.StatusOK, struct {
@@ -88,13 +88,15 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userID := middlewares.UserContext(r)
 
-	deleteErr := repository.DeleteUser(userID)
-	if deleteErr != nil {
-		utils.RespondError(w, http.StatusInternalServerError, deleteErr, "failed to delete user account")
+	status, err := services.DeleteUser(userID)
+	if err != nil {
+		utils.RespondError(w, status, err, "failed to delete user account")
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, struct {
+	utils.RespondJSON(w, status, struct {
 		Message string `json:"message"`
-	}{"account deleted successfully"})
+	}{
+		Message: "account deleted successfully",
+	})
 }
