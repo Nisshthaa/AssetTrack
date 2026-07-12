@@ -1,11 +1,9 @@
-package dbHelper
+package repository
 
 import (
 	"AssetTrack/database"
 	"AssetTrack/models"
 	"AssetTrack/utils"
-
-	"github.com/jmoiron/sqlx"
 )
 
 func IsUserExists(email string) (bool, error) {
@@ -19,14 +17,14 @@ func IsUserExists(email string) (bool, error) {
 	return exist, err
 }
 
-func CreateUser(db sqlx.Ext, Name, Email, Password, PhoneNo, Role, RoleType string) (string, error) {
+func CreateUser(Name, Email, Password, PhoneNo, Role, RoleType string) (string, error) {
 
 	SQL := `INSERT INTO users(name, email, password, phone_no, role, type)
 			VALUES ($1, TRIM(LOWER($2)), $3, $4, $5, $6)
 			RETURNING user_id
 `
 	var userID string
-	if err := db.QueryRowx(SQL, Name, Email, Password, PhoneNo, Role, RoleType).Scan(&userID); err != nil {
+	if err := database.DB.QueryRowx(SQL, Name, Email, Password, PhoneNo, Role, RoleType).Scan(&userID); err != nil {
 		return "", err
 	}
 
@@ -51,7 +49,7 @@ func GetUserIDByPassword(email, password string) (string, error) {
 	return user.UserID, nil
 }
 
-func GetUser(userID string) (models.User, error) {
+func GetUser(userID string) (*models.User, error) {
 	var user models.User
 	SQL := `SELECT user_id, name, email , phone_no, role, type
               FROM users 
@@ -59,5 +57,15 @@ func GetUser(userID string) (models.User, error) {
                 AND archived_at IS NULL`
 
 	getErr := database.DB.Get(&user, SQL, userID)
-	return user, getErr
+	return &user, getErr
+}
+
+func DeleteUser(userID string) error {
+	SQL := `UPDATE users
+			  SET archived_at = NOW()
+			  WHERE user_id = $1
+			    AND archived_at IS NULL`
+
+	_, err := database.DB.Exec(SQL, userID)
+	return err
 }

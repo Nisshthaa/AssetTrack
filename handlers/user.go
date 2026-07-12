@@ -1,63 +1,39 @@
 package handlers
 
 import (
-	"AssetTrack/database"
-	"AssetTrack/database/dbHelper"
 	"AssetTrack/middlewares"
 	"AssetTrack/models"
+	"AssetTrack/repository"
+	services "AssetTrack/service"
 	"AssetTrack/utils"
 	"net/http"
-
-	"github.com/go-playground/validator/v10"
 )
 
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	var body models.RegisterUser
-	if parseErr := utils.ParseBody(r, &body); parseErr != nil {
-		utils.RespondError(w, http.StatusBadRequest, parseErr, "failed to parse request body")
+
+	if err := utils.ParseBody(r, &body); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err, "invalid request body")
 		return
 	}
 
-	v := validator.New()
-	if err := v.Struct(body); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, err, "input validation failed")
+	token, status, err := services.RegisterUser(body)
+
+	if err != nil {
+		utils.RespondError(w, status, err, err.Error())
 		return
 	}
 
-	exists, existErr := dbHelper.IsUserExists(body.Email)
-	if existErr != nil {
-		utils.RespondError(w, http.StatusInternalServerError, existErr, "failed to check user existence")
+	if token == "" {
+		utils.RespondError(w, status, nil, "user already exists")
 		return
 	}
 
-	if exists {
-		utils.RespondError(w, http.StatusBadRequest, nil, "user already exists")
-		return
-	}
-
-	hashedPassword, hashErr := utils.HashPassword(body.Password)
-	if hashErr != nil {
-		utils.RespondError(w, http.StatusInternalServerError, hashErr, "failed to secure password")
-		return
-	}
-
-	userID, saveErr := dbHelper.CreateUser(database.DB, body.Name, body.Email, hashedPassword, body.PhoneNumber, body.Role, body.RoleType)
-	if saveErr != nil {
-		utils.RespondError(w, http.StatusInternalServerError, saveErr, "failed to create user")
-		return
-	}
-
-	token, tokenErr := utils.GenerateJWT(userID)
-	if tokenErr != nil {
-		utils.RespondError(w, http.StatusInternalServerError, tokenErr, "failed to generate token")
-		return
-	}
-
-	utils.RespondJSON(w, http.StatusCreated, struct {
+	utils.RespondJSON(w, http.StatusOK, struct {
 		Message string `json:"message"`
 		Token   string `json:"token"`
 	}{
-		Message: "User registered successfully",
+		Message: "User logged in successfully",
 		Token:   token,
 	})
 }
@@ -70,26 +46,15 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	v := validator.New()
-	if err := v.Struct(body); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, err, "input validation failed")
+	token, status, err := services.LoginUser(body)
+
+	if err != nil {
+		utils.RespondError(w, status, err, err.Error())
 		return
 	}
 
-	userID, userErr := dbHelper.GetUserIDByPassword(body.Email, body.Password)
-	if userErr != nil {
-		utils.RespondError(w, http.StatusInternalServerError, userErr, "failed to find user")
-		return
-	}
-
-	if userID == "" {
-		utils.RespondError(w, http.StatusBadRequest, nil, "user not found")
-		return
-	}
-
-	token, tokenErr := utils.GenerateJWT(userID)
-	if tokenErr != nil {
-		utils.RespondError(w, http.StatusInternalServerError, tokenErr, "failed to generate token")
+	if token == "" {
+		utils.RespondError(w, status, nil, "user already exists")
 		return
 	}
 
@@ -105,10 +70,31 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	userID := middlewares.UserContext(r)
 
-	user, getErr := dbHelper.GetUser(userID)
-	if getErr != nil {
-		utils.RespondError(w, http.StatusInternalServerError, getErr, "failed to get user")
+	user, status, err := services.GetUser(userID)
+	if err != nil {
+		utils.RespondError(w, status, err, "failed to get user")
 		return
 	}
-	utils.RespondJSON(w, http.StatusOK, user)
+
+	utils.RespondJSON(w, status, user)
+}
+func LogoutUser(w http.ResponseWriter, r *http.Request) {
+
+	utils.RespondJSON(w, http.StatusOK, struct {
+		Message string `json:"message"`
+	}{"logout successful"})
+}
+
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	userID := middlewares.UserContext(r)
+
+	deleteErr := repository.DeleteUser(userID)
+	if deleteErr != nil {
+		utils.RespondError(w, http.StatusInternalServerError, deleteErr, "failed to delete user account")
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, struct {
+		Message string `json:"message"`
+	}{"account deleted successfully"})
 }

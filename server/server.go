@@ -30,6 +30,8 @@ func SetUpRoutes() *Server {
 	mux.HandleFunc("POST /v1/login", handlers.LoginUser)
 
 	mux.Handle("GET /v1/profile", protected(handlers.GetUser))
+	mux.Handle("POST /v1/logout", protected(handlers.LogoutUser))
+	mux.Handle("DELETE /v1/delete", protected(handlers.DeleteUser))
 
 	return &Server{
 		router: mux,
