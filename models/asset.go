@@ -78,3 +78,18 @@ type MobileSpecs struct {
 	Storage         string `json:"storage" db:"storage"`
 	Charger         bool   `json:"charger" db:"charger"`
 }
+
+type UpdateAssetRequest struct {
+	Brand         string    `json:"brand" validate:"required"`
+	Model         string    `json:"model" validate:"required"`
+	SerialNumber  string    `json:"serialNumber" validate:"required"`
+	Status        string    `json:"status" validate:"required,oneof=available assigned needs_repair under_repair damaged"`
+	OwnerType     string    `json:"owner" validate:"required,oneof=client remotestate"`
+	WarrantyStart time.Time `json:"warrantyStart" validate:"required"`
+	WarrantyEnd   time.Time `json:"warrantyEnd" validate:"required"`
+
+	Laptop   LaptopSpecsRequest   `json:"laptop,omitempty"`
+	Keyboard KeyboardSpecsRequest `json:"keyboard,omitempty"`
+	Mouse    MouseSpecsRequest    `json:"mouse,omitempty"`
+	Mobile   MobileSpecsRequest   `json:"mobile,omitempty"`
+}

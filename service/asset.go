@@ -94,3 +94,66 @@ func GetAssetByID(assetID string) models.ServiceResponse {
 
 	return utils.ServiceSuccess(asset, http.StatusOK)
 }
+
+func UpdateAsset(assetID string, body models.UpdateAssetRequest) models.ServiceResponse {
+
+	v := validator.New()
+	if err := v.Struct(body); err != nil {
+		return utils.ServiceError(err, http.StatusBadRequest, "input validation failed")
+	}
+
+	if body.WarrantyEnd.Before(body.WarrantyStart) {
+		return utils.ServiceError(
+			fmt.Errorf("invalid warranty range"),
+			http.StatusBadRequest,
+			"invalid warranty range",
+		)
+	}
+
+	txErr := database.Tx(func(tx *sqlx.Tx) error {
+
+		assetType, err := repository.UpdateAsset(tx, assetID, body)
+		if err != nil {
+			return fmt.Errorf("failed to update asset: %w", err)
+		}
+
+		switch assetType {
+
+		case "laptop":
+			if err := repository.UpdateLaptopSpecs(tx, assetID, body.Laptop); err != nil {
+				return fmt.Errorf("failed to update laptop specs: %w", err)
+			}
+
+		case "keyboard":
+			if err := repository.UpdateKeyboardSpecs(tx, assetID, body.Keyboard); err != nil {
+				return fmt.Errorf("failed to update keyboard specs: %w", err)
+			}
+
+		case "mouse":
+			if err := repository.UpdateMouseSpecs(tx, assetID, body.Mouse); err != nil {
+				return fmt.Errorf("failed to update mouse specs: %w", err)
+			}
+
+		case "mobile":
+			if err := repository.UpdateMobileSpecs(tx, assetID, body.Mobile); err != nil {
+				return fmt.Errorf("failed to update mobile specs: %w", err)
+			}
+
+		default:
+			return fmt.Errorf("unsupported asset type: %s", assetType)
+		}
+
+		return nil
+	})
+
+	if txErr != nil {
+
+		if errors.Is(txErr, sql.ErrNoRows) {
+			return utils.ServiceError(txErr, http.StatusNotFound, "asset not found")
+		}
+
+		return utils.ServiceError(txErr, http.StatusInternalServerError, "failed to update asset")
+	}
+
+	return utils.ServiceSuccess(nil, http.StatusOK)
+}

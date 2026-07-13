@@ -106,7 +106,7 @@ func GetAssetByID(assetID string) (models.AssetDetails, error) {
 			ON u.user_id = aa.assigned_to
 			AND u.archived_at IS NULL
 			WHERE a.asset_id = $1
-			AND a.archived_at IS NULL;`
+			AND a.archived_at IS NULL`
 
 	err := database.DB.Get(&asset, SQL, assetID)
 	if err != nil {
@@ -114,4 +114,64 @@ func GetAssetByID(assetID string) (models.AssetDetails, error) {
 	}
 
 	return asset, nil
+}
+
+func UpdateAsset(tx *sqlx.Tx, assetID string, body models.UpdateAssetRequest) (string, error) {
+	var assetType string
+
+	SQL := `UPDATE assets
+		SET serial_number = $1,brand = $2,model = $3,status = $4,owner_type = $5,warranty_start = $6,warranty_end = $7,updated_at = CURRENT_TIMESTAMP
+		WHERE asset_id = $8
+			AND archived_at IS NULL
+			RETURNING asset_type`
+
+	if err := tx.QueryRowx(SQL, body.SerialNumber, body.Brand, body.Model, body.Status, body.OwnerType, body.WarrantyStart, body.WarrantyEnd, assetID).Scan(&assetType); err != nil {
+		return "", err
+	}
+	return assetType, nil
+}
+
+func UpdateLaptopSpecs(tx *sqlx.Tx, assetID string, body models.LaptopSpecsRequest) error {
+
+	SQL := `UPDATE laptop
+		SET processor = $1,ram = $2,storage = $3,operating_system = $4,charger = $5
+		WHERE asset_id = $6;`
+
+	_, err := tx.Exec(SQL, body.Processor, body.Ram, body.Storage, body.OperatingSystem, body.Charger, assetID)
+
+	return err
+}
+
+func UpdateKeyboardSpecs(tx *sqlx.Tx, assetID string, body models.KeyboardSpecsRequest) error {
+
+	SQL := `UPDATE keyboard
+		SET layout = $1,connection_type = $2
+		WHERE asset_id = $3;`
+
+	_, err := tx.Exec(
+		SQL, body.Layout, body.ConnectionType, assetID)
+
+	return err
+}
+
+func UpdateMouseSpecs(tx *sqlx.Tx, assetID string, body models.MouseSpecsRequest) error {
+
+	SQL := `UPDATE mouse
+		SET dpi = $1,connection_type = $2
+		WHERE asset_id = $3;`
+
+	_, err := tx.Exec(SQL, body.Dpi, body.ConnectionType, assetID)
+
+	return err
+}
+
+func UpdateMobileSpecs(tx *sqlx.Tx, assetID string, body models.MobileSpecsRequest) error {
+
+	SQL := `UPDATE mobile
+		SET operating_system = $1,ram = $2,storage = $3,charger = $4
+		WHERE asset_id = $5;`
+
+	_, err := tx.Exec(SQL, body.OperatingSystem, body.Ram, body.Storage, body.Charger, assetID)
+
+	return err
 }

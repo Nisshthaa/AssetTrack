@@ -21,8 +21,7 @@ func CreateUser(Name, Email, Password, PhoneNo, Role, RoleType string) (string, 
 
 	SQL := `INSERT INTO users(name, email, password, phone_no, role, type)
 			VALUES ($1, TRIM(LOWER($2)), $3, $4, $5, $6)
-			RETURNING user_id
-`
+			RETURNING user_id`
 	var userID string
 	if err := database.DB.QueryRowx(SQL, Name, Email, Password, PhoneNo, Role, RoleType).Scan(&userID); err != nil {
 		return "", err
