@@ -82,14 +82,14 @@ func GetAssets() models.ServiceResponse {
 }
 
 func GetAssetByID(assetID string) models.ServiceResponse {
-	asset, err := repository.GetAssetByID(assetID)
-	if err != nil {
+	asset, getErr := repository.GetAssetByID(assetID)
+	if getErr != nil {
 
-		if errors.Is(err, sql.ErrNoRows) {
-			return utils.ServiceError(err, http.StatusNotFound, "asset not found")
+		if errors.Is(getErr, sql.ErrNoRows) {
+			return utils.ServiceError(getErr, http.StatusNotFound, "asset not found")
 		}
 
-		return utils.ServiceError(err, http.StatusInternalServerError, "failed to get asset")
+		return utils.ServiceError(getErr, http.StatusInternalServerError, "failed to get asset")
 	}
 
 	return utils.ServiceSuccess(asset, http.StatusOK)
@@ -112,9 +112,9 @@ func UpdateAsset(assetID string, body models.UpdateAssetRequest) models.ServiceR
 
 	txErr := database.Tx(func(tx *sqlx.Tx) error {
 
-		assetType, err := repository.UpdateAsset(tx, assetID, body)
-		if err != nil {
-			return fmt.Errorf("failed to update asset: %w", err)
+		assetType, updateErr := repository.UpdateAsset(tx, assetID, body)
+		if updateErr != nil {
+			return fmt.Errorf("failed to update asset: %w", updateErr)
 		}
 
 		switch assetType {

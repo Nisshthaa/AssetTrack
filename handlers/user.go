@@ -67,9 +67,9 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUser(w http.ResponseWriter, r *http.Request) {
-	userID := middlewares.UserContext(r)
+	userCtx := middlewares.GetUserContext(r)
 
-	user, status, err := services.GetUser(userID)
+	user, status, err := services.GetUser(userCtx.UserID)
 	if err != nil {
 		utils.RespondError(w, status, err, "failed to get user")
 		return
@@ -86,9 +86,9 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
-	userID := middlewares.UserContext(r)
+	userCtx := middlewares.GetUserContext(r)
 
-	status, err := services.DeleteUser(userID)
+	status, err := services.DeleteUser(userCtx.UserID)
 	if err != nil {
 		utils.RespondError(w, status, err, "failed to delete user account")
 		return

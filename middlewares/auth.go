@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"AssetTrack/models"
 	"AssetTrack/utils"
 	"context"
 	"net/http"
@@ -48,13 +49,48 @@ func Authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), userContext, userID)
+		role, ok := claims["role"].(string)
+		if !ok {
+			utils.RespondError(w, http.StatusUnauthorized, nil, "invalid token claims")
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), userContext, models.UserContext{
+			UserID: userID,
+			Role:   role,
+		})
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
 	})
 }
-func UserContext(r *http.Request) string {
-	userID := r.Context().Value(userContext).(string)
-	return userID
+func GetUserContext(r *http.Request) models.UserContext {
+	return r.Context().Value(userContext).(models.UserContext)
+}
+
+func RequireRoles(roles ...string) func(http.Handler) http.Handler {
+
+	return func(next http.Handler) http.Handler {
+
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			user := GetUserContext(r)
+
+			allowed := false
+
+			for _, role := range roles {
+				if role == user.Role {
+					allowed = true
+					break
+				}
+			}
+
+			if !allowed {
+				utils.RespondError(w, http.StatusForbidden, nil, "access denied")
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }

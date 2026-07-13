@@ -43,7 +43,7 @@ func RegisterUser(body models.RegisterUser) (string, int, error) {
 		return "", http.StatusInternalServerError, userErr
 	}
 
-	token, tokenErr := utils.GenerateJWT(userID)
+	token, tokenErr := utils.GenerateJWT(userID, body.Role)
 	if tokenErr != nil {
 		return "", http.StatusInternalServerError, tokenErr
 	}
@@ -57,17 +57,12 @@ func LoginUser(body models.LoginUser) (string, int, error) {
 		return "", http.StatusBadRequest, err
 	}
 
-	userID, userErr := repository.GetUserIDByPassword(body.Email, body.Password)
+	user, userErr := repository.GetUserByPassword(body.Email, body.Password)
 	if userErr != nil {
-		return "", http.StatusInternalServerError, userErr
+		return "", http.StatusUnauthorized, userErr
 	}
 
-	if userID == "" {
-		return "", http.StatusBadRequest, userErr
-
-	}
-
-	token, tokenErr := utils.GenerateJWT(userID)
+	token, tokenErr := utils.GenerateJWT(user.UserID, user.Role)
 	if tokenErr != nil {
 		return "", http.StatusInternalServerError, tokenErr
 	}
