@@ -157,3 +157,30 @@ func UpdateAsset(assetID string, body models.UpdateAssetRequest) models.ServiceR
 
 	return utils.ServiceSuccess(nil, http.StatusOK)
 }
+
+func DeleteAsset(assetID string) models.ServiceResponse {
+
+	txErr := database.Tx(func(tx *sqlx.Tx) error {
+
+		if err := repository.ArchiveAsset(tx, assetID); err != nil {
+			return fmt.Errorf("failed to archive asset: %w", err)
+		}
+
+		if err := repository.ArchiveAssetAssignment(tx, assetID); err != nil {
+			return fmt.Errorf("failed to archive asset assignments: %w", err)
+		}
+
+		return nil
+	})
+
+	if txErr != nil {
+
+		if errors.Is(txErr, sql.ErrNoRows) {
+			return utils.ServiceError(txErr, http.StatusNotFound, "asset not found")
+		}
+
+		return utils.ServiceError(txErr, http.StatusInternalServerError, "failed to delete asset")
+	}
+
+	return utils.ServiceSuccess(nil, http.StatusOK)
+}

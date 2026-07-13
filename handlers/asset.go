@@ -91,3 +91,21 @@ func UpdateAsset(w http.ResponseWriter, r *http.Request) {
 		Message: "asset updated successfully",
 	})
 }
+
+func DeleteAsset(w http.ResponseWriter, r *http.Request) {
+
+	assetID := r.PathValue("assetID")
+
+	response := services.DeleteAsset(assetID)
+
+	if response.Err != nil {
+		utils.RespondError(w, response.StatusCode, response.Err, response.Message)
+		return
+	}
+
+	utils.RespondJSON(w, response.StatusCode, struct {
+		Message string `json:"message"`
+	}{
+		Message: "asset deleted successfully",
+	})
+}

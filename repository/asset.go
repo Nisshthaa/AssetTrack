@@ -3,6 +3,7 @@ package repository
 import (
 	"AssetTrack/database"
 	"AssetTrack/models"
+	"database/sql"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -173,5 +174,36 @@ func UpdateMobileSpecs(tx *sqlx.Tx, assetID string, body models.MobileSpecsReque
 
 	_, err := tx.Exec(SQL, body.OperatingSystem, body.Ram, body.Storage, body.Charger, assetID)
 
+	return err
+}
+
+func ArchiveAsset(tx *sqlx.Tx, assetID string) error {
+
+	SQL := `UPDATE assets
+		SET archived_at = CURRENT_TIMESTAMP
+		WHERE asset_id = $1
+			AND archived_at IS NULL;`
+
+	result, err := tx.Exec(SQL, assetID)
+	if err != nil {
+		return err
+	}
+
+	if rows, _ := result.RowsAffected(); rows == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
+
+func ArchiveAssetAssignment(tx *sqlx.Tx, assetID string) error {
+
+	SQL := `UPDATE asset_assignments
+		SET archived_at = CURRENT_TIMESTAMP
+		WHERE asset_id = $1
+			AND archived_at IS NULL;
+	`
+
+	_, err := tx.Exec(SQL, assetID)
 	return err
 }

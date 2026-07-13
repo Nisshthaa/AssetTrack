@@ -37,6 +37,7 @@ func SetUpRoutes() *Server {
 	mux.Handle("GET /v1/assets", protected(handlers.GetAssets))
 	mux.Handle("GET /v1/assets/{assetID}", protected(handlers.GetAssetByID))
 	mux.Handle("PUT /v1/assets/{assetID}", protected(handlers.UpdateAsset))
+	mux.Handle("DELETE /v1/assets/{assetID}", protected(handlers.DeleteAsset))
 
 	return &Server{
 		router: mux,
