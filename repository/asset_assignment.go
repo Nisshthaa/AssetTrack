@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"database/sql"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -23,4 +25,30 @@ func UpdateAssetStatus(tx *sqlx.Tx, assetID, status string) error {
 
 	_, err := tx.Exec(SQL, status, assetID)
 	return err
+}
+
+func ReturnAsset(tx *sqlx.Tx, assetID, userID string) error {
+
+	SQL := `
+		UPDATE asset_assignments
+		SET
+			returned_at = CURRENT_TIMESTAMP,
+			updated_at = CURRENT_TIMESTAMP
+		WHERE
+			asset_id = $1
+			AND assigned_to = $2
+			AND returned_at IS NULL
+			AND archived_at IS NULL;
+	`
+
+	result, err := tx.Exec(SQL, assetID, userID)
+	if err != nil {
+		return err
+	}
+
+	if rows, _ := result.RowsAffected(); rows == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
 }

@@ -42,6 +42,7 @@ func SetUpRoutes() *Server {
 	mux.Handle("DELETE /v1/assets/{assetID}", protectedWithRoles(handlers.DeleteAsset, "admin"))
 
 	mux.Handle("POST /v1/assets/assign", protectedWithRoles(handlers.AssignAsset, "admin", "project_manager"))
+	mux.Handle("PUT /v1/assets/return", protectedWithRoles(handlers.ReturnAsset, "admin", "project_manager"))
 
 	return &Server{
 		router: mux,

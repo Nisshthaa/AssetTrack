@@ -24,3 +24,17 @@ func AssignAsset(w http.ResponseWriter, r *http.Request) {
 		Message: "asset assigned successfully",
 	})
 }
+
+func ReturnAsset(w http.ResponseWriter, r *http.Request) {
+
+	var body models.AssignAssetRequest
+
+	if parseErr := utils.ParseBody(r, &body); parseErr != nil {
+		utils.RespondError(w, http.StatusBadRequest, parseErr, "failed to parse request body")
+		return
+	}
+
+	response := services.ReturnAsset(body)
+
+	utils.RespondJSON(w, response.StatusCode, response)
+}

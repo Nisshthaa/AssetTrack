@@ -5,6 +5,8 @@ import (
 	"AssetTrack/models"
 	"AssetTrack/repository"
 	"AssetTrack/utils"
+	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -37,4 +39,36 @@ func AssignAsset(body models.AssignAssetRequest) models.ServiceResponse {
 	}
 
 	return utils.ServiceSuccess(nil, http.StatusCreated)
+}
+
+func ReturnAsset(body models.AssignAssetRequest) models.ServiceResponse {
+
+	v := validator.New()
+	if err := v.Struct(body); err != nil {
+		return utils.ServiceError(err, http.StatusBadRequest, "input validation failed")
+	}
+
+	txErr := database.Tx(func(tx *sqlx.Tx) error {
+
+		if err := repository.ReturnAsset(tx, body.AssetID, body.UserID); err != nil {
+			return fmt.Errorf("failed to return asset: %w", err)
+		}
+
+		if err := repository.UpdateAssetStatus(tx, body.AssetID, "available"); err != nil {
+			return fmt.Errorf("failed to update asset status: %w", err)
+		}
+
+		return nil
+	})
+
+	if txErr != nil {
+
+		if errors.Is(txErr, sql.ErrNoRows) {
+			return utils.ServiceError(txErr, http.StatusNotFound, "asset assignment not found")
+		}
+
+		return utils.ServiceError(txErr, http.StatusInternalServerError, "failed to return asset")
+	}
+
+	return utils.ServiceSuccess(nil, http.StatusOK)
 }
