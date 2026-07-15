@@ -33,7 +33,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func LoginUser(w http.ResponseWriter, r *http.Request) {
-	var body models.LoginUser
+	var body models.LoginRequest
 
 	if parseErr := utils.ParseBody(r, &body); parseErr != nil {
 		utils.RespondError(w, http.StatusBadRequest, parseErr, "failed to parse request body")
@@ -64,7 +64,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.GetUserContext(r)
 
-	user, statusCode, message,err := services.GetUser(userCtx.UserID)
+	user, statusCode, message, err := services.GetUser(userCtx.UserID)
 	if err != nil {
 		utils.RespondError(w, statusCode, err, message)
 		return
@@ -76,7 +76,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 func GetUserAssetByID(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.GetUserContext(r)
 
-	assets, statusCode,message,err := services.GetUserAssets(userCtx.UserID)
+	assets, statusCode, message, err := services.GetUserAssets(userCtx.UserID)
 	if err != nil {
 		utils.RespondError(w, statusCode, err, message)
 		return
@@ -94,7 +94,7 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.GetUserContext(r)
 
-	status,message ,err := services.DeleteUser(userCtx.UserID)
+	status, message, err := services.DeleteUser(userCtx.UserID)
 	if err != nil {
 		utils.RespondError(w, status, err, message)
 		return

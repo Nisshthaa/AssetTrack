@@ -28,6 +28,11 @@ type AssetDetails struct {
 	AssignedTo    string    `json:"assignedTo" db:"assigned_to"`
 	WarrantyStart time.Time `json:"warrantyStart" db:"warranty_start" `
 	WarrantyEnd   time.Time `json:"warrantyEnd" db:"warranty_end"`
+
+	Laptop   *LaptopSpecsRequest   `json:"laptopSpecs,omitempty"`
+	Keyboard *KeyboardSpecsRequest `json:"keyboardSpecs,omitempty"`
+	Mouse    *MouseSpecsRequest    `json:"mouseSpecs,omitempty"`
+	Mobile   *MobileSpecsRequest   `json:"mobileSpecs,omitempty"`
 }
 type LaptopSpecsRequest struct {
 	Processor       string `json:"processor"`

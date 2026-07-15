@@ -89,6 +89,69 @@ func GetAssetByID(assetID string) (models.AssetDetails, error) {
 	return asset, nil
 }
 
+func GetLaptopSpecifications(tx *sqlx.Tx, assetID string) (models.LaptopSpecsRequest, error) {
+
+	var laptop models.LaptopSpecsRequest
+
+	SQL := `SELECT processor,ram,storage ,operating_system ,Charger
+			FROM laptop 
+			WHERE asset_id = $1`
+
+	err := tx.Get(&laptop, SQL, assetID)
+	if err != nil {
+		return models.LaptopSpecsRequest{}, err
+	}
+
+	return laptop, nil
+}
+
+func GetKeyboardSpecifications(tx *sqlx.Tx, assetID string) (models.KeyboardSpecsRequest, error) {
+
+	var keyboard models.KeyboardSpecsRequest
+
+	SQL := `SELECT layout,connection_type
+			FROM keyboard 
+			WHERE asset_id = $1`
+
+	err := tx.Get(&keyboard, SQL, assetID)
+	if err != nil {
+		return models.KeyboardSpecsRequest{}, err
+	}
+
+	return keyboard, nil
+}
+
+func GetMouseSpecifications(tx *sqlx.Tx, assetID string) (models.MouseSpecsRequest, error) {
+
+	var mouse models.MouseSpecsRequest
+
+	SQL := `SELECT dpi,connection_type
+			FROM  mouse 
+			WHERE asset_id = $1`
+
+	err := tx.Get(&mouse, SQL, assetID)
+	if err != nil {
+		return models.MouseSpecsRequest{}, err
+	}
+
+	return mouse, nil
+}
+
+func GetMobileSpecifications(tx *sqlx.Tx, assetID string) (models.MobileSpecsRequest, error) {
+
+	var mobile models.MobileSpecsRequest
+
+	SQL := `SELECT ram,storage ,operating_system ,Charger
+			FROM mobile 
+			WHERE asset_id = $1`
+
+	err := tx.Get(&mobile, SQL, assetID)
+	if err != nil {
+		return models.MobileSpecsRequest{}, err
+	}
+
+	return mobile, nil
+}
 func UpdateAsset(tx *sqlx.Tx, assetID string, body models.UpdateAssetRequest) (string, error) {
 	var assetType string
 

@@ -44,7 +44,8 @@ func RegisterUser(body models.RegisterUser) (string, int, error) {
 	return token, http.StatusCreated, nil
 }
 
-func LoginUser(body models.LoginUser) (string, int, error) {
+func LoginUser(body models.LoginRequest) (string, int, error) {
+
 	v := validator.New()
 	if err := v.Struct(body); err != nil {
 		return "input validation failed", http.StatusBadRequest, err
@@ -81,6 +82,16 @@ func GetUserAssets(userID string) ([]models.AssetDetails, int, string, error) {
 	}
 
 	return assets, http.StatusOK, "user assets fetched successfully", err
+}
+
+func GetUserAssetByID(userID, assetID string) (models.AssetDetails, int, string, error) {
+
+	asset, err := repository.GetUserAssetByID(userID, assetID)
+	if err != nil {
+		return nil, http.StatusInternalServerError, "failed to fetch user asset", err
+	}
+
+	return asset, http.StatusOK, "user asset fetched successfully", err
 }
 
 func DeleteUser(userID string) (int, string, error) {

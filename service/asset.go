@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/jmoiron/sqlx"
@@ -77,15 +78,66 @@ func GetAssets() ([]models.AssetDetails, int, string, error) {
 
 func GetAssetByID(assetID string) (models.AssetDetails, int, string, error) {
 
-	asset, getErr := repository.GetAssetByID(assetID)
-	if getErr != nil {
-		if errors.Is(getErr, sql.ErrNoRows) {
-			return models.AssetDetails{}, http.StatusNotFound, "asset not found", getErr
+	var asset models.AssetDetails
+
+	txErr := database.Tx(func(tx *sqlx.Tx) error {
+
+		var err error
+
+		asset, err = repository.GetAssetByID(assetID)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return fmt.Errorf("asset details not found: %w", err)
+			}
+			return fmt.Errorf("failed to get asset details: %w", err)
 		}
-		return models.AssetDetails{}, http.StatusInternalServerError, "failed to get asset", getErr
+
+		switch asset.AssetType {
+
+		case "laptop":
+			laptop, err := repository.GetLaptopSpecifications(tx, assetID)
+			if err != nil {
+				return fmt.Errorf("failed to get laptop specs: %w", err)
+			}
+			asset.Laptop = &laptop
+
+		case "keyboard":
+			keyboard, err := repository.GetKeyboardSpecifications(tx, assetID)
+			if err != nil {
+				return fmt.Errorf("failed to get keyboard specs: %w", err)
+			}
+			asset.Keyboard = &keyboard
+
+		case "mouse":
+			mouse, err := repository.GetMouseSpecifications(tx, assetID)
+			if err != nil {
+				return fmt.Errorf("failed to get mouse specs: %w", err)
+			}
+			asset.Mouse = &mouse
+
+		case "mobile":
+			mobile, err := repository.GetMobileSpecifications(tx, assetID)
+			if err != nil {
+				return fmt.Errorf("failed to get mobile specs: %w", err)
+			}
+			asset.Mobile = &mobile
+
+		default:
+			return fmt.Errorf("unsupported asset type: %s", asset.AssetType)
+		}
+
+		return nil
+	})
+
+	if txErr != nil {
+		if strings.Contains(txErr.Error(), "not found") {
+			return models.AssetDetails{}, http.StatusNotFound, "asset not found", txErr
+		}
+
+		return models.AssetDetails{}, http.StatusInternalServerError, "failed to fetch asset", txErr
 	}
 
-	return asset, http.StatusOK, "asset fetched successfully", getErr
+	return asset, http.StatusOK, "asset fetched successfully", nil
 }
 
 func UpdateAsset(assetID string, body *models.UpdateAssetRequest) (int, string, error) {

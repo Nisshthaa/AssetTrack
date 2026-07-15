@@ -11,7 +11,7 @@ type RegisterUser struct {
 	Password    string `json:"password" db:"password" validate:"required,min=8,max=20"`
 }
 
-type LoginUser struct {
+type LoginRequest struct {
 	Email    string `json:"email" db:"email" validate:"email"`
 	Password string `json:"password" db:"password" validate:"required,alphanum,min=8,max=20"`
 }

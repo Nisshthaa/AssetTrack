@@ -28,7 +28,7 @@ func CreateUser(Name, Email, Password, PhoneNo, Role, RoleType string) (string, 
 	return userID, crtErr
 }
 
-func GetUserByPassword(body models.LoginUser) (models.LoginData, error) {
+func GetUserByPassword(body models.LoginRequest) (models.LoginData, error) {
 	SQL := `SELECT user_id, password, role
 			  FROM users 
 			  WHERE email = TRIM($1)
@@ -69,6 +69,22 @@ func GetUserAssets(userID string) ([]models.AssetDetails, error) {
 
 	err := database.DB.Select(&assets, SQL, userID)
 	return assets, err
+}
+
+func GetUserAssetByID(userID, assetID string) (models.AssetDetails, error) {
+	var asset models.AssetDetails
+
+	SQL := `SELECT a.asset_id,a.serial_number,a.brand,a.model,a.asset_type,a.status,a.owner_type,a.warranty_start,a.warranty_end
+          FROM assets a 
+          JOIN asset_assignments aa ON aa.asset_id=a.asset_id
+          WHERE aa.assigned_to=$1 
+          AND aa.asset_id=$2
+          AND aa.returned_at IS NULL
+          AND aa.archived_at IS NULL
+          AND a.archived_at IS NULL`
+
+	err := database.DB.Get(&asset, SQL, userID, assetID)
+	return asset, err
 }
 
 func DeleteUser(userID string) error {
