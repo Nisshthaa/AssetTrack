@@ -41,47 +41,19 @@ type LaptopSpecsRequest struct {
 	OperatingSystem string `json:"operatingSystem" `
 	Charger         bool   `json:"charger" `
 }
-type LaptopSpecs struct {
-	AssetID         string `json:"assetID" db:"asset_id"`
-	Processor       string `json:"processor" db:"processor"`
-	Ram             string `json:"ram" db:"ram"`
-	Storage         string `json:"storage" db:"storage"`
-	OperatingSystem string `json:"operatingSystem" db:"operating_system"`
-	Charger         bool   `json:"charger" db:"charger"`
-}
-
 type KeyboardSpecsRequest struct {
 	Layout         string `json:"layout" `
 	ConnectionType string `json:"connectionType" `
 }
-type KeyboardSpecs struct {
-	AssetID        string `json:"assetID" db:"asset_id"`
-	Layout         string `json:"layout" db:"layout"`
-	ConnectionType string `json:"connectionType" db:"connectivity"`
-}
-
 type MouseSpecsRequest struct {
 	Dpi            int    `json:"dpi" `
 	ConnectionType string `json:"connectionType"`
 }
-type MouseSpecs struct {
-	AssetID        string `json:"assetID" db:"asset_id"`
-	Dpi            int    `json:"dpi" db:"dpi"`
-	ConnectionType string `json:"connectionType" db:"connectivity"`
-}
-
 type MobileSpecsRequest struct {
 	OperatingSystem string `json:"operatingSystem" `
 	Ram             string `json:"ram" `
 	Storage         string `json:"storage" `
 	Charger         bool   `json:"charger" `
-}
-type MobileSpecs struct {
-	AssetID         string `json:"assetID" db:"asset_id"`
-	OperatingSystem string `json:"operatingSystem" db:"operating_system"`
-	Ram             string `json:"ram" db:"ram"`
-	Storage         string `json:"storage" db:"storage"`
-	Charger         bool   `json:"charger" db:"charger"`
 }
 
 type UpdateAssetRequest struct {
