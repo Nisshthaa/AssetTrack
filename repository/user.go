@@ -4,6 +4,8 @@ import (
 	"AssetTrack/database"
 	"AssetTrack/models"
 	"AssetTrack/utils"
+
+	"github.com/jmoiron/sqlx"
 )
 
 func IsUserExists(email string) (bool, error) {
@@ -62,8 +64,10 @@ func GetUserAssets(userID string) ([]models.AssetDetails, error) {
 
 	SQL := `SELECT a.asset_id,a.serial_number,a.brand,a.model,a.asset_type,a.status,a.owner_type,a.warranty_start,a.warranty_end 
 			FROM asset_assignments aa 
-			JOIN assets a ON aa.asset_id = a.asset_id
-			WHERE aa.assigned_to = $1 AND aa.returned_at IS NULL 
+			JOIN assets a 
+			ON aa.asset_id = a.asset_id
+			WHERE aa.assigned_to = $1 
+			AND aa.returned_at IS NULL 
 			AND aa.archived_at IS NULL 
 			AND a.archived_at IS NULL; `
 
@@ -71,7 +75,7 @@ func GetUserAssets(userID string) ([]models.AssetDetails, error) {
 	return assets, err
 }
 
-func GetUserAssetByID(userID, assetID string) (models.AssetDetails, error) {
+func GetUserAssetByID(tx *sqlx.Tx, userID, assetID string) (models.AssetDetails, error) {
 	var asset models.AssetDetails
 
 	SQL := `SELECT a.asset_id,a.serial_number,a.brand,a.model,a.asset_type,a.status,a.owner_type,a.warranty_start,a.warranty_end
@@ -83,7 +87,7 @@ func GetUserAssetByID(userID, assetID string) (models.AssetDetails, error) {
           AND aa.archived_at IS NULL
           AND a.archived_at IS NULL`
 
-	err := database.DB.Get(&asset, SQL, userID, assetID)
+	err := tx.Get(&asset, SQL, userID, assetID)
 	return asset, err
 }
 
