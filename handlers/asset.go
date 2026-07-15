@@ -69,7 +69,7 @@ func GetAssetByID(w http.ResponseWriter, r *http.Request) {
 
 func UpdateAsset(w http.ResponseWriter, r *http.Request) {
 
-	var body *models.UpdateAssetRequest
+	var body models.UpdateAssetRequest
 
 	if parseErr := utils.ParseBody(r, &body); parseErr != nil {
 		utils.RespondError(w, http.StatusBadRequest, parseErr, "failed to parse request body")

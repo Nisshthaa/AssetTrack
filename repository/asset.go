@@ -171,7 +171,7 @@ func UpdateAsset(tx *sqlx.Tx, assetID string, body models.UpdateAssetRequest) (s
 func UpdateLaptopSpecs(tx *sqlx.Tx, assetID string, body models.LaptopSpecsRequest) error {
 
 	SQL := `UPDATE laptop
-		SET processor =COALESCE ($1,''),ram = COALESCE($2,''),storage =COALESCE ($3,''),operating_system = COALESCE($4,''),charger = COALESCE($5,'')
+		SET processor =$1,ram=$2,storage =$3,operating_system = $4,charger = $5
 		WHERE asset_id = $6;`
 
 	_, err := tx.Exec(SQL, body.Processor, body.Ram, body.Storage, body.OperatingSystem, body.Charger, assetID)
@@ -182,7 +182,7 @@ func UpdateLaptopSpecs(tx *sqlx.Tx, assetID string, body models.LaptopSpecsReque
 func UpdateKeyboardSpecs(tx *sqlx.Tx, assetID string, body models.KeyboardSpecsRequest) error {
 
 	SQL := `UPDATE keyboard
-		SET layout = COALESCE($1,''),connection_type =COALESCE ($2,'')
+		SET layout = $1,connection_type=$2
 		WHERE asset_id = $3;`
 
 	_, err := tx.Exec(
@@ -194,7 +194,7 @@ func UpdateKeyboardSpecs(tx *sqlx.Tx, assetID string, body models.KeyboardSpecsR
 func UpdateMouseSpecs(tx *sqlx.Tx, assetID string, body models.MouseSpecsRequest) error {
 
 	SQL := `UPDATE mouse
-		SET dpi =COALESCE ($1,''),connection_type = COALESCE($2,'')
+		SET dpi =$1,connection_type = $2
 		WHERE asset_id = $3;`
 
 	_, err := tx.Exec(SQL, body.Dpi, body.ConnectionType, assetID)
@@ -205,7 +205,7 @@ func UpdateMouseSpecs(tx *sqlx.Tx, assetID string, body models.MouseSpecsRequest
 func UpdateMobileSpecs(tx *sqlx.Tx, assetID string, body models.MobileSpecsRequest) error {
 
 	SQL := `UPDATE mobile
-		SET operating_system =COALESCE($1,''),ram = COALESCE($2,''),storage = COALESCE($3,''),charger = ($4,'')
+		SET operating_system =$1,ram = $2,storage = $3,charger = $4
 		WHERE asset_id = $5;`
 
 	_, err := tx.Exec(SQL, body.OperatingSystem, body.Ram, body.Storage, body.Charger, assetID)

@@ -35,40 +35,40 @@ type AssetDetails struct {
 	Mobile   *MobileSpecsRequest   `json:"mobileSpecs,omitempty"`
 }
 type LaptopSpecsRequest struct {
-	Processor       string `json:"processor"`
-	Ram             string `json:"ram" `
-	Storage         string `json:"storage"`
-	OperatingSystem string `json:"operatingSystem" `
-	Charger         bool   `json:"charger" `
+	Processor       string `json:"processor" db:"processor"`
+	Ram             string `json:"ram" db:"ram" `
+	Storage         string `json:"storage" db:"storage"`
+	OperatingSystem string `json:"operatingSystem"  db:"operating_system"`
+	Charger         bool   `json:"charger" db:"charger"`
 }
 type KeyboardSpecsRequest struct {
-	Layout         string `json:"layout" `
-	ConnectionType string `json:"connectionType" `
+	Layout         string `json:"layout" db:"layout"`
+	ConnectionType string `json:"connectionType" db:"connection_type"`
 }
 type MouseSpecsRequest struct {
-	Dpi            int    `json:"dpi" `
-	ConnectionType string `json:"connectionType"`
+	Dpi            int    `json:"dpi" db:"dpi"`
+	ConnectionType string `json:"connectionType" db:"connection_type"`
 }
 type MobileSpecsRequest struct {
-	OperatingSystem string `json:"operatingSystem" `
-	Ram             string `json:"ram" `
-	Storage         string `json:"storage" `
-	Charger         bool   `json:"charger" `
+	OperatingSystem string `json:"operatingSystem" db:"layout"`
+	Ram             string `json:"ram" db:"ram"`
+	Storage         string `json:"storage" db:"storage"`
+	Charger         bool   `json:"charger" db:"layout"`
 }
 
 type UpdateAssetRequest struct {
-	Brand         *string    `json:"brand"`
-	Model         *string    `json:"model"`
-	SerialNumber  *string    `json:"serialNumber"`
-	Status        *string    `json:"status" validate:"omitempty,oneof=available assigned needs_repair under_repair damaged"`
-	OwnerType     *string    `json:"owner" validate:"omitempty,oneof=client remotestate"`
-	WarrantyStart *time.Time `json:"warrantyStart"`
-	WarrantyEnd   *time.Time `json:"warrantyEnd"`
+	Brand         string    `json:"brand"`
+	Model         string    `json:"model"`
+	SerialNumber  string    `json:"serialNumber"`
+	Status        string    `json:"status" validate:"omitempty,oneof=available assigned needs_repair under_repair damaged"`
+	OwnerType     string    `json:"owner" validate:"omitempty,oneof=client remotestate"`
+	WarrantyStart time.Time `json:"warrantyStart"`
+	WarrantyEnd   time.Time `json:"warrantyEnd"`
 
-	Laptop   *LaptopSpecsRequest   `json:"laptop,omitempty"`
-	Keyboard *KeyboardSpecsRequest `json:"keyboard,omitempty"`
-	Mouse    *MouseSpecsRequest    `json:"mouse,omitempty"`
-	Mobile   *MobileSpecsRequest   `json:"mobile,omitempty"`
+	Laptop   LaptopSpecsRequest   `json:"laptop,omitempty"`
+	Keyboard KeyboardSpecsRequest `json:"keyboard,omitempty"`
+	Mouse    MouseSpecsRequest    `json:"mouse,omitempty"`
+	Mobile   MobileSpecsRequest   `json:"mobile,omitempty"`
 }
 
 type RepairAssetRequest struct {

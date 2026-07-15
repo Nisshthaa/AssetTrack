@@ -131,7 +131,7 @@ func GetAssetByID(assetID string) (models.AssetDetails, int, string, error) {
 	return asset, http.StatusOK, "asset fetched successfully", nil
 }
 
-func UpdateAsset(assetID string, body *models.UpdateAssetRequest) (int, string, error) {
+func UpdateAsset(assetID string, body models.UpdateAssetRequest) (int, string, error) {
 
 	v := validator.New()
 	if err := v.Struct(body); err != nil {
@@ -140,7 +140,7 @@ func UpdateAsset(assetID string, body *models.UpdateAssetRequest) (int, string, 
 
 	txErr := database.Tx(func(tx *sqlx.Tx) error {
 
-		assetType, updateErr := repository.UpdateAsset(tx, assetID, *body)
+		assetType, updateErr := repository.UpdateAsset(tx, assetID, body)
 		if updateErr != nil {
 			return fmt.Errorf("failed to update asset: %w", updateErr)
 		}
@@ -148,22 +148,22 @@ func UpdateAsset(assetID string, body *models.UpdateAssetRequest) (int, string, 
 		switch assetType {
 
 		case "laptop":
-			if err := repository.UpdateLaptopSpecs(tx, assetID, *body.Laptop); err != nil {
+			if err := repository.UpdateLaptopSpecs(tx, assetID, body.Laptop); err != nil {
 				return fmt.Errorf("failed to update laptop specs: %w", err)
 			}
 
 		case "keyboard":
-			if err := repository.UpdateKeyboardSpecs(tx, assetID, *body.Keyboard); err != nil {
+			if err := repository.UpdateKeyboardSpecs(tx, assetID, body.Keyboard); err != nil {
 				return fmt.Errorf("failed to update keyboard specs: %w", err)
 			}
 
 		case "mouse":
-			if err := repository.UpdateMouseSpecs(tx, assetID, *body.Mouse); err != nil {
+			if err := repository.UpdateMouseSpecs(tx, assetID, body.Mouse); err != nil {
 				return fmt.Errorf("failed to update mouse specs: %w", err)
 			}
 
 		case "mobile":
-			if err := repository.UpdateMobileSpecs(tx, assetID, *body.Mobile); err != nil {
+			if err := repository.UpdateMobileSpecs(tx, assetID, body.Mobile); err != nil {
 				return fmt.Errorf("failed to update mobile specs: %w", err)
 			}
 
