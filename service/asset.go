@@ -4,12 +4,10 @@ import (
 	"AssetTrack/database"
 	"AssetTrack/models"
 	"AssetTrack/repository"
-	"AssetTrack/utils"
 	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/jmoiron/sqlx"
@@ -127,11 +125,7 @@ func GetAssetByID(assetID string) (models.AssetDetails, int, string, error) {
 	})
 
 	if txErr != nil {
-		if strings.Contains(txErr.Error(), "not found") {
-			return models.AssetDetails{}, http.StatusNotFound, "asset not found", txErr
-		}
-
-		return models.AssetDetails{}, http.StatusInternalServerError, "failed to fetch asset", txErr
+		return models.AssetDetails{}, http.StatusInternalServerError, "transaction failed", txErr
 	}
 
 	return asset, http.StatusOK, "asset fetched successfully", nil
@@ -182,11 +176,7 @@ func UpdateAsset(assetID string, body *models.UpdateAssetRequest) (int, string, 
 
 	if txErr != nil {
 
-		if errors.Is(txErr, sql.ErrNoRows) {
-			return http.StatusNotFound, "asset not found", txErr
-		}
-
-		return http.StatusInternalServerError, "failed to update asset", txErr
+		return http.StatusInternalServerError, "transaction failed", txErr
 	}
 
 	return http.StatusOK, "asset updated successfully", nil
@@ -219,15 +209,11 @@ func DeleteAsset(assetID string) (error, int, string) {
 	return nil, http.StatusOK, "asset deleted successfully"
 }
 
-func AssetSentToRepair(assetID string) models.ServiceResponse {
+func AssetSentToRepair(assetID string) (error, int, string) {
 
 	userID, err := repository.GetAssignedUser(assetID)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return utils.ServiceError(err, http.StatusNotFound, "asset is not assigned")
-		}
-
-		return utils.ServiceError(err, http.StatusInternalServerError, "failed to get assigned user")
+		return err, http.StatusInternalServerError, "failed to get assigned user"
 	}
 
 	txErr := database.Tx(func(tx *sqlx.Tx) error {
@@ -250,16 +236,16 @@ func AssetSentToRepair(assetID string) models.ServiceResponse {
 	if txErr != nil {
 
 		if errors.Is(txErr, sql.ErrNoRows) {
-			return utils.ServiceError(txErr, http.StatusNotFound, "asset assignment not found")
+			return txErr, http.StatusNotFound, "asset assignment not found"
 		}
 
-		return utils.ServiceError(txErr, http.StatusInternalServerError, "failed to send asset for repair")
+		return txErr, http.StatusInternalServerError, "failed to send asset for repair"
 	}
 
-	return utils.ServiceSuccess(nil, http.StatusOK)
+	return nil, http.StatusOK, "assent sent to repair"
 }
 
-func AssetRepairCompleted(assetID string) models.ServiceResponse {
+func AssetRepairCompleted(assetID string) (error, int, string) {
 
 	txErr := database.Tx(func(tx *sqlx.Tx) error {
 
@@ -275,12 +261,8 @@ func AssetRepairCompleted(assetID string) models.ServiceResponse {
 	})
 
 	if txErr != nil {
-
-		if errors.Is(txErr, sql.ErrNoRows) {
-			return utils.ServiceError(txErr, http.StatusNotFound, "asset is not under repair")
-		}
-		return utils.ServiceError(txErr, http.StatusInternalServerError, "failed to complete asset repair")
+		return txErr, http.StatusInternalServerError, "failed to complete asset repair"
 	}
 
-	return utils.ServiceSuccess(nil, http.StatusOK)
+	return nil, http.StatusOK, "asset repair status updated"
 }

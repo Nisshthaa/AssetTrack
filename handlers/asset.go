@@ -96,12 +96,12 @@ func AssetSentToRepair(w http.ResponseWriter, r *http.Request) {
 
 	assetID := r.PathValue("assetID")
 
-	response := services.AssetSentToRepair(assetID)
+	_, statusCode, message := services.AssetSentToRepair(assetID)
 
-	utils.RespondJSON(w, response.StatusCode, struct {
+	utils.RespondJSON(w, statusCode, struct {
 		Message string `json:"message"`
 	}{
-		Message: "asset repair request sent successfully",
+		Message: message,
 	})
 }
 
@@ -109,12 +109,12 @@ func AssetRepairCompleted(w http.ResponseWriter, r *http.Request) {
 
 	assetID := r.PathValue("assetID")
 
-	response := services.AssetRepairCompleted(assetID)
+	_, statusCode, message := services.AssetRepairCompleted(assetID)
 
-	utils.RespondJSON(w, response.StatusCode, struct {
+	utils.RespondJSON(w, statusCode, struct {
 		Message string `json:"message"`
 	}{
-		Message: "asset repair status updated successfully",
+		Message: message,
 	})
 }
 

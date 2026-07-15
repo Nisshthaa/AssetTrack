@@ -135,7 +135,7 @@ func GetUserAssetByID(userID, assetID string) (models.AssetDetails, int, string,
 	})
 
 	if txErr != nil {
-		return models.AssetDetails{}, http.StatusInternalServerError, "failed to fetch asset", txErr
+		return models.AssetDetails{}, http.StatusInternalServerError, "transaction failed", txErr
 	}
 
 	return asset, http.StatusOK, "asset fetched successfully", nil
@@ -161,7 +161,7 @@ func DeleteUser(userID string) (int, string, error) {
 	})
 
 	if txErr != nil {
-		return http.StatusInternalServerError, "failed to fetch asset", txErr
+		return http.StatusInternalServerError, "transaction failed", txErr
 	}
 	return http.StatusOK, "user deleted successfully", nil
 }
