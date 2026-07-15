@@ -86,9 +86,6 @@ func GetAssetByID(assetID string) (models.AssetDetails, int, string, error) {
 
 		asset, err = repository.GetAssetByID(assetID)
 		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				return fmt.Errorf("asset details not found: %w", err)
-			}
 			return fmt.Errorf("failed to get asset details: %w", err)
 		}
 
@@ -235,7 +232,7 @@ func AssetSentToRepair(assetID string) models.ServiceResponse {
 
 	txErr := database.Tx(func(tx *sqlx.Tx) error {
 
-		if err := repository.ReturnAsset(tx, assetID, userID); err != nil {
+		if err := repository.ReturnUserAsset(tx, assetID, userID); err != nil {
 			return fmt.Errorf("failed to return asset: %w", err)
 		}
 

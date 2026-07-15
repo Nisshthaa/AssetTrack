@@ -16,12 +16,12 @@ func AssignAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := services.AssignAsset(body)
+	_, statusCode, message := services.AssignAsset(body)
 
-	utils.RespondJSON(w, response.StatusCode, struct {
+	utils.RespondJSON(w, statusCode, struct {
 		Message string `json:"message"`
 	}{
-		Message: "asset assigned successfully",
+		Message: message,
 	})
 }
 
@@ -34,7 +34,7 @@ func ReturnAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := services.ReturnAsset(body)
+	_, statusCode, message := services.ReturnAsset(body)
 
-	utils.RespondJSON(w, response.StatusCode, response)
+	utils.RespondJSON(w, statusCode, message)
 }

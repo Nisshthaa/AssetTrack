@@ -91,12 +91,12 @@ func GetUserAssetByID(tx *sqlx.Tx, userID, assetID string) (models.AssetDetails,
 	return asset, err
 }
 
-func DeleteUser(userID string) error {
+func DeleteUser(tx *sqlx.Tx, userID string) error {
 	SQL := `UPDATE users
 			SET archived_at = NOW()
 			WHERE user_id = $1
 			AND archived_at IS NULL`
 
-	_, delErr := database.DB.Exec(SQL, userID)
+	_, delErr := tx.Exec(SQL, userID)
 	return delErr
 }

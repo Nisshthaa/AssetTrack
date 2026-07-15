@@ -2,12 +2,10 @@ package services
 
 import (
 	"AssetTrack/database"
-	"AssetTrack/repository"
-	"fmt"
-	"strings"
-
 	"AssetTrack/models"
+	"AssetTrack/repository"
 	"AssetTrack/utils"
+	"fmt"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -93,9 +91,8 @@ func GetUserAssetByID(userID, assetID string) (models.AssetDetails, int, string,
 	var asset models.AssetDetails
 
 	txErr := database.Tx(func(tx *sqlx.Tx) error {
-		var err error
 
-		asset, err = repository.GetUserAssetByID(tx, userID, assetID)
+		asset, err := repository.GetUserAssetByID(tx, userID, assetID)
 		if err != nil {
 			return fmt.Errorf("failed to get asset details: %w", err)
 		}
@@ -138,10 +135,6 @@ func GetUserAssetByID(userID, assetID string) (models.AssetDetails, int, string,
 	})
 
 	if txErr != nil {
-		if strings.Contains(txErr.Error(), "not found") {
-			return models.AssetDetails{}, http.StatusNotFound, "asset not found", txErr
-		}
-
 		return models.AssetDetails{}, http.StatusInternalServerError, "failed to fetch asset", txErr
 	}
 
@@ -149,10 +142,26 @@ func GetUserAssetByID(userID, assetID string) (models.AssetDetails, int, string,
 }
 
 func DeleteUser(userID string) (int, string, error) {
-	err := repository.DeleteUser(userID)
-	if err != nil {
-		return http.StatusInternalServerError, "failed to delete user", err
-	}
+	txErr := database.Tx(func(tx *sqlx.Tx) error {
 
+		assetID, returnErr := repository.ReturnUserAssets(tx, userID)
+		if returnErr != nil {
+			return fmt.Errorf("failed to delete user: %w", returnErr)
+		}
+
+		if updateErr := repository.UpdateAssetStatus(tx, assetID, "available"); updateErr != nil {
+			return fmt.Errorf("failed to update asset status: %w", updateErr)
+		}
+
+		if delErr := repository.DeleteUser(tx, userID); delErr != nil {
+			return fmt.Errorf("failed to delete user: %w", delErr)
+		}
+
+		return nil
+	})
+
+	if txErr != nil {
+		return http.StatusInternalServerError, "failed to fetch asset", txErr
+	}
 	return http.StatusOK, "user deleted successfully", nil
 }
