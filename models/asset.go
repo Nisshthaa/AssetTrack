@@ -3,14 +3,14 @@ package models
 import "time"
 
 type AssetRequest struct {
-	Brand         string               `json:"brand" db:"brand" `
-	Model         string               `json:"model" db:"model" `
-	SerialNumber  string               `json:"serialNumber" db:"serial_number" `
-	AssetType     string               `json:"assetType" db:"asset_type" validate:"required,oneof=laptop keyboard mouse mobile"`
-	Status        string               `json:"status" db:"status" validate:"required,oneof=available assigned needs_repair under_repair damaged"`
-	OwnerType     string               `json:"owner" db:"owner_type" validate:"required,oneof=client remotestate"`
-	WarrantyStart time.Time            `json:"warrantyStart" db:"warranty_start" `
-	WarrantyEnd   time.Time            `json:"warrantyEnd" db:"warranty_end" `
+	Brand         string               `json:"brand" `
+	Model         string               `json:"model"  `
+	SerialNumber  string               `json:"serialNumber"  `
+	AssetType     string               `json:"assetType" validate:"required,oneof=laptop keyboard mouse mobile"`
+	Status        string               `json:"status" validate:"required,oneof=available assigned needs_repair under_repair damaged"`
+	OwnerType     string               `json:"owner" validate:"required,oneof=client remotestate"`
+	WarrantyStart time.Time            `json:"warrantyStart"  `
+	WarrantyEnd   time.Time            `json:"warrantyEnd" `
 	Laptop        LaptopSpecsRequest   `json:"laptopSpecs,omitempty"`
 	Keyboard      KeyboardSpecsRequest `json:"keyboardSpecs,omitempty"`
 	Mouse         MouseSpecsRequest    `json:"mouseSpecs,omitempty"`
