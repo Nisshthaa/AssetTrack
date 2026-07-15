@@ -16,15 +16,10 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, status, err := services.RegisterUser(body)
+	token, statusCode, err := services.RegisterUser(body)
 
 	if err != nil {
-		utils.RespondError(w, status, err, err.Error())
-		return
-	}
-
-	if token == "" {
-		utils.RespondError(w, status, nil, "user already exists")
+		utils.RespondError(w, statusCode, err, "user not registered")
 		return
 	}
 
@@ -32,7 +27,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		Message string `json:"message"`
 		Token   string `json:"token"`
 	}{
-		Message: "User logged in successfully",
+		Message: "User registered successfully",
 		Token:   token,
 	})
 }
@@ -45,15 +40,15 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, status, err := services.LoginUser(body)
+	token, statusCode, err := services.LoginUser(body)
 
 	if err != nil {
-		utils.RespondError(w, status, err, err.Error())
+		utils.RespondError(w, statusCode, err, err.Error())
 		return
 	}
 
 	if token == "" {
-		utils.RespondError(w, status, nil, "user already exists")
+		utils.RespondError(w, statusCode, nil, "user already exists")
 		return
 	}
 
@@ -69,13 +64,24 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.GetUserContext(r)
 
-	user, status, err := services.GetUser(userCtx.UserID)
+	user, statusCode, message,err := services.GetUser(userCtx.UserID)
 	if err != nil {
-		utils.RespondError(w, status, err, "failed to get user")
+		utils.RespondError(w, statusCode, err, message)
 		return
 	}
 
-	utils.RespondJSON(w, status, user)
+	utils.RespondJSON(w, statusCode, user)
+}
+
+func GetUserAssetByID(w http.ResponseWriter, r *http.Request) {
+	userCtx := middlewares.GetUserContext(r)
+
+	assets, statusCode,message,err := services.GetUserAssets(userCtx.UserID)
+	if err != nil {
+		utils.RespondError(w, statusCode, err, message)
+		return
+	}
+	utils.RespondJSON(w, statusCode, assets)
 }
 
 func LogoutUser(w http.ResponseWriter, r *http.Request) {
@@ -88,9 +94,9 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.GetUserContext(r)
 
-	status, err := services.DeleteUser(userCtx.UserID)
+	status,message ,err := services.DeleteUser(userCtx.UserID)
 	if err != nil {
-		utils.RespondError(w, status, err, "failed to delete user account")
+		utils.RespondError(w, status, err, message)
 		return
 	}
 

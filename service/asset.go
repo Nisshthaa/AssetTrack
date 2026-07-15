@@ -14,15 +14,11 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func CreateAsset(body models.AssetRequest) models.ServiceResponse {
+func CreateAsset(body models.AssetRequest) (int, string, error) {
 
 	v := validator.New()
 	if err := v.Struct(body); err != nil {
-		return utils.ServiceError(err, http.StatusBadRequest, "input validation failed")
-	}
-
-	if body.WarrantyEnd.Before(body.WarrantyStart) {
-		return utils.ServiceError(fmt.Errorf("invalid warranty range"), http.StatusBadRequest, "invalid warranty range")
+		return http.StatusBadRequest, "input validation failed", err
 	}
 
 	txErr := database.Tx(func(tx *sqlx.Tx) error {
@@ -62,57 +58,46 @@ func CreateAsset(body models.AssetRequest) models.ServiceResponse {
 	})
 
 	if txErr != nil {
-		return utils.ServiceError(txErr, http.StatusInternalServerError, "failed to create asset")
+		return http.StatusInternalServerError, "transaction failed", txErr
 	}
 
-	return utils.ServiceSuccess(nil, http.StatusCreated)
+	return http.StatusCreated, "asset created successfully", nil
 }
 
-func GetAssets() models.ServiceResponse {
-	assets, getErr := repository.GetAssets()
-	if getErr != nil {
-		return utils.ServiceError(
-			getErr,
-			http.StatusInternalServerError,
-			"failed to get assets",
-		)
+func GetAssets() ([]models.AssetDetails, int, string, error) {
+
+	assets, err := repository.GetAssets()
+
+	if err != nil {
+		return nil, http.StatusInternalServerError, "failed to get assets", err
 	}
 
-	return utils.ServiceSuccess(assets, http.StatusOK)
+	return assets, http.StatusOK, "assets fetched successfully", nil
 }
 
-func GetAssetByID(assetID string) models.ServiceResponse {
+func GetAssetByID(assetID string) (models.AssetDetails, int, string, error) {
+
 	asset, getErr := repository.GetAssetByID(assetID)
 	if getErr != nil {
-
 		if errors.Is(getErr, sql.ErrNoRows) {
-			return utils.ServiceError(getErr, http.StatusNotFound, "asset not found")
+			return models.AssetDetails{}, http.StatusNotFound, "asset not found", getErr
 		}
-
-		return utils.ServiceError(getErr, http.StatusInternalServerError, "failed to get asset")
+		return models.AssetDetails{}, http.StatusInternalServerError, "failed to get asset", getErr
 	}
 
-	return utils.ServiceSuccess(asset, http.StatusOK)
+	return asset, http.StatusOK, "asset fetched successfully", getErr
 }
 
-func UpdateAsset(assetID string, body models.UpdateAssetRequest) models.ServiceResponse {
+func UpdateAsset(assetID string, body *models.UpdateAssetRequest) (int, string, error) {
 
 	v := validator.New()
 	if err := v.Struct(body); err != nil {
-		return utils.ServiceError(err, http.StatusBadRequest, "input validation failed")
-	}
-
-	if body.WarrantyEnd.Before(body.WarrantyStart) {
-		return utils.ServiceError(
-			fmt.Errorf("invalid warranty range"),
-			http.StatusBadRequest,
-			"invalid warranty range",
-		)
+		return http.StatusBadRequest, "input validation failed", err
 	}
 
 	txErr := database.Tx(func(tx *sqlx.Tx) error {
 
-		assetType, updateErr := repository.UpdateAsset(tx, assetID, body)
+		assetType, updateErr := repository.UpdateAsset(tx, assetID, *body)
 		if updateErr != nil {
 			return fmt.Errorf("failed to update asset: %w", updateErr)
 		}
@@ -120,22 +105,22 @@ func UpdateAsset(assetID string, body models.UpdateAssetRequest) models.ServiceR
 		switch assetType {
 
 		case "laptop":
-			if err := repository.UpdateLaptopSpecs(tx, assetID, body.Laptop); err != nil {
+			if err := repository.UpdateLaptopSpecs(tx, assetID, *body.Laptop); err != nil {
 				return fmt.Errorf("failed to update laptop specs: %w", err)
 			}
 
 		case "keyboard":
-			if err := repository.UpdateKeyboardSpecs(tx, assetID, body.Keyboard); err != nil {
+			if err := repository.UpdateKeyboardSpecs(tx, assetID, *body.Keyboard); err != nil {
 				return fmt.Errorf("failed to update keyboard specs: %w", err)
 			}
 
 		case "mouse":
-			if err := repository.UpdateMouseSpecs(tx, assetID, body.Mouse); err != nil {
+			if err := repository.UpdateMouseSpecs(tx, assetID, *body.Mouse); err != nil {
 				return fmt.Errorf("failed to update mouse specs: %w", err)
 			}
 
 		case "mobile":
-			if err := repository.UpdateMobileSpecs(tx, assetID, body.Mobile); err != nil {
+			if err := repository.UpdateMobileSpecs(tx, assetID, *body.Mobile); err != nil {
 				return fmt.Errorf("failed to update mobile specs: %w", err)
 			}
 
@@ -149,16 +134,16 @@ func UpdateAsset(assetID string, body models.UpdateAssetRequest) models.ServiceR
 	if txErr != nil {
 
 		if errors.Is(txErr, sql.ErrNoRows) {
-			return utils.ServiceError(txErr, http.StatusNotFound, "asset not found")
+			return http.StatusNotFound, "asset not found", txErr
 		}
 
-		return utils.ServiceError(txErr, http.StatusInternalServerError, "failed to update asset")
+		return http.StatusInternalServerError, "failed to update asset", txErr
 	}
 
-	return utils.ServiceSuccess(nil, http.StatusOK)
+	return http.StatusOK, "asset updated successfully", nil
 }
 
-func DeleteAsset(assetID string) models.ServiceResponse {
+func DeleteAsset(assetID string) (error, int, string) {
 
 	txErr := database.Tx(func(tx *sqlx.Tx) error {
 
@@ -176,10 +161,76 @@ func DeleteAsset(assetID string) models.ServiceResponse {
 	if txErr != nil {
 
 		if errors.Is(txErr, sql.ErrNoRows) {
-			return utils.ServiceError(txErr, http.StatusNotFound, "asset not found")
+			return txErr, http.StatusNotFound, "asset not found"
 		}
 
-		return utils.ServiceError(txErr, http.StatusInternalServerError, "failed to delete asset")
+		return txErr, http.StatusInternalServerError, "failed to delete asset"
+	}
+
+	return nil, http.StatusOK, "asset deleted successfully"
+}
+
+func AssetSentToRepair(assetID string) models.ServiceResponse {
+
+	userID, err := repository.GetAssignedUser(assetID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return utils.ServiceError(err, http.StatusNotFound, "asset is not assigned")
+		}
+
+		return utils.ServiceError(err, http.StatusInternalServerError, "failed to get assigned user")
+	}
+
+	txErr := database.Tx(func(tx *sqlx.Tx) error {
+
+		if err := repository.ReturnAsset(tx, assetID, userID); err != nil {
+			return fmt.Errorf("failed to return asset: %w", err)
+		}
+
+		if err := repository.AssetSentToRepair(tx, assetID); err != nil {
+			return fmt.Errorf("failed to create repair record: %w", err)
+		}
+
+		if err := repository.UpdateAssetStatus(tx, assetID, "under_repair"); err != nil {
+			return fmt.Errorf("failed to update asset status: %w", err)
+		}
+
+		return nil
+	})
+
+	if txErr != nil {
+
+		if errors.Is(txErr, sql.ErrNoRows) {
+			return utils.ServiceError(txErr, http.StatusNotFound, "asset assignment not found")
+		}
+
+		return utils.ServiceError(txErr, http.StatusInternalServerError, "failed to send asset for repair")
+	}
+
+	return utils.ServiceSuccess(nil, http.StatusOK)
+}
+
+func AssetRepairCompleted(assetID string) models.ServiceResponse {
+
+	txErr := database.Tx(func(tx *sqlx.Tx) error {
+
+		if err := repository.AssetRepairCompleted(tx, assetID); err != nil {
+			return fmt.Errorf("failed to update repair status: %w", err)
+		}
+
+		if err := repository.UpdateAssetStatus(tx, assetID, "available"); err != nil {
+			return fmt.Errorf("failed to update asset status: %w", err)
+		}
+
+		return nil
+	})
+
+	if txErr != nil {
+
+		if errors.Is(txErr, sql.ErrNoRows) {
+			return utils.ServiceError(txErr, http.StatusNotFound, "asset is not under repair")
+		}
+		return utils.ServiceError(txErr, http.StatusInternalServerError, "failed to complete asset repair")
 	}
 
 	return utils.ServiceSuccess(nil, http.StatusOK)

@@ -64,32 +64,11 @@ func CreateMobileSpecs(tx *sqlx.Tx, assetID string, body models.MobileSpecsReque
 func GetAssets() ([]models.AssetDetails, error) {
 	var assets []models.AssetDetails
 
-	SQL := `
-		SELECT
-			a.asset_id,
-			a.serial_number,
-			a.brand,
-			a.model,
-			a.asset_type,
-			a.status,
-			a.owner_type,
-			COALESCE(u.name, '') AS assigned_to,
-			a.warranty_start,
-			a.warranty_end
-		FROM assets a
-		LEFT JOIN asset_assignments aa
-			ON aa.asset_id = a.asset_id
-			AND aa.returned_at IS NULL
-			AND aa.archived_at IS NULL
-		LEFT JOIN users u
-			ON u.user_id = aa.assigned_to
-			AND u.archived_at IS NULL
-		WHERE a.archived_at IS NULL
-		ORDER BY a.created_at DESC;
-	`
+	SQL := `SELECT asset_id,serial_number,brand,model,asset_type,status,owner_type,warranty_start,warranty_end
+		    FROM assets 
+			WHERE archived_at IS NULL`
 
 	err := database.DB.Select(&assets, SQL)
-
 	return assets, err
 }
 
@@ -97,17 +76,10 @@ func GetAssetByID(assetID string) (models.AssetDetails, error) {
 
 	var asset models.AssetDetails
 
-	SQL := `SELECT a.asset_id,a.serial_number,a.brand,a.model,a.asset_type,a.status,a.owner_type,COALESCE(u.name, '') AS assigned_to,a.warranty_start,a.warranty_end
-			FROM assets a
-			LEFT JOIN asset_assignments aa
-			ON aa.asset_id = a.asset_id
-			AND aa.returned_at IS NULL
-			AND aa.archived_at IS NULL
-			LEFT JOIN users u
-			ON u.user_id = aa.assigned_to
-			AND u.archived_at IS NULL
-			WHERE a.asset_id = $1
-			AND a.archived_at IS NULL`
+	SQL := `SELECT asset_id,serial_number,brand,model,asset_type,status,owner_type,warranty_start,warranty_end
+			FROM assets 
+			WHERE asset_id = $1
+			AND archived_at IS NULL`
 
 	err := database.DB.Get(&asset, SQL, assetID)
 	if err != nil {
@@ -121,12 +93,13 @@ func UpdateAsset(tx *sqlx.Tx, assetID string, body models.UpdateAssetRequest) (s
 	var assetType string
 
 	SQL := `UPDATE assets
-		SET serial_number = $1,brand = $2,model = $3,status = $4,owner_type = $5,warranty_start = $6,warranty_end = $7,updated_at = CURRENT_TIMESTAMP
-		WHERE asset_id = $8
+			SET serial_number = $1,brand = $2,model = $3,status = $4,owner_type = $5,warranty_start = $6,warranty_end = $7,updated_at = CURRENT_TIMESTAMP
+			WHERE asset_id = $8
 			AND archived_at IS NULL
 			RETURNING asset_type`
 
-	if err := tx.QueryRowx(SQL, body.SerialNumber, body.Brand, body.Model, body.Status, body.OwnerType, body.WarrantyStart, body.WarrantyEnd, assetID).Scan(&assetType); err != nil {
+	if err := tx.QueryRowx(SQL, body.SerialNumber, body.Brand, body.Model, body.Status, body.OwnerType, body.WarrantyStart, body.WarrantyEnd, assetID).
+		Scan(&assetType); err != nil {
 		return "", err
 	}
 	return assetType, nil
@@ -135,7 +108,7 @@ func UpdateAsset(tx *sqlx.Tx, assetID string, body models.UpdateAssetRequest) (s
 func UpdateLaptopSpecs(tx *sqlx.Tx, assetID string, body models.LaptopSpecsRequest) error {
 
 	SQL := `UPDATE laptop
-		SET processor = $1,ram = $2,storage = $3,operating_system = $4,charger = $5
+		SET processor =COALESCE ($1,''),ram = COALESCE($2,''),storage =COALESCE ($3,''),operating_system = COALESCE($4,''),charger = COALESCE($5,'')
 		WHERE asset_id = $6;`
 
 	_, err := tx.Exec(SQL, body.Processor, body.Ram, body.Storage, body.OperatingSystem, body.Charger, assetID)
@@ -146,7 +119,7 @@ func UpdateLaptopSpecs(tx *sqlx.Tx, assetID string, body models.LaptopSpecsReque
 func UpdateKeyboardSpecs(tx *sqlx.Tx, assetID string, body models.KeyboardSpecsRequest) error {
 
 	SQL := `UPDATE keyboard
-		SET layout = $1,connection_type = $2
+		SET layout = COALESCE($1,''),connection_type =COALESCE ($2,'')
 		WHERE asset_id = $3;`
 
 	_, err := tx.Exec(
@@ -158,7 +131,7 @@ func UpdateKeyboardSpecs(tx *sqlx.Tx, assetID string, body models.KeyboardSpecsR
 func UpdateMouseSpecs(tx *sqlx.Tx, assetID string, body models.MouseSpecsRequest) error {
 
 	SQL := `UPDATE mouse
-		SET dpi = $1,connection_type = $2
+		SET dpi =COALESCE ($1,''),connection_type = COALESCE($2,'')
 		WHERE asset_id = $3;`
 
 	_, err := tx.Exec(SQL, body.Dpi, body.ConnectionType, assetID)
@@ -169,7 +142,7 @@ func UpdateMouseSpecs(tx *sqlx.Tx, assetID string, body models.MouseSpecsRequest
 func UpdateMobileSpecs(tx *sqlx.Tx, assetID string, body models.MobileSpecsRequest) error {
 
 	SQL := `UPDATE mobile
-		SET operating_system = $1,ram = $2,storage = $3,charger = $4
+		SET operating_system =COALESCE($1,''),ram = COALESCE($2,''),storage = COALESCE($3,''),charger = ($4,'')
 		WHERE asset_id = $5;`
 
 	_, err := tx.Exec(SQL, body.OperatingSystem, body.Ram, body.Storage, body.Charger, assetID)
@@ -205,5 +178,25 @@ func ArchiveAssetAssignment(tx *sqlx.Tx, assetID string) error {
 	`
 
 	_, err := tx.Exec(SQL, assetID)
+	return err
+}
+
+func AssetSentToRepair(tx *sqlx.Tx, assetID string) error {
+	SQL := `INSERT INTO asset_repairs(asset_id)
+			VALUES ($1)`
+
+	_, err := tx.Exec(SQL, assetID)
+
+	return err
+}
+
+func AssetRepairCompleted(tx *sqlx.Tx, assetID string) error {
+	SQL := `UPDATE asset_repairs
+			SET repair_completed_on=NOW(),updated_at=NOW()
+			WHERE asset_id=$1
+			AND archived_at is NULL`
+
+	_, err := tx.Exec(SQL, assetID)
+
 	return err
 }

@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"AssetTrack/database"
 	"database/sql"
 
 	"github.com/jmoiron/sqlx"
@@ -25,6 +26,19 @@ func UpdateAssetStatus(tx *sqlx.Tx, assetID, status string) error {
 
 	_, err := tx.Exec(SQL, status, assetID)
 	return err
+}
+
+func GetAssignedUser(assetID string) (string, error) {
+	var userID string
+
+	SQL := `SELECT assigned_to
+		FROM asset_assignments
+		WHERE
+			asset_id = $1
+			AND returned_at IS NULL
+			AND archived_at IS NULL;`
+	err := database.DB.Get(&userID, SQL, assetID)
+	return userID, err
 }
 
 func ReturnAsset(tx *sqlx.Tx, assetID, userID string) error {

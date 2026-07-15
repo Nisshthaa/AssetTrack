@@ -15,35 +15,35 @@ func CreateAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := services.CreateAsset(body)
+	statusCode, message, err := services.CreateAsset(body)
 
-	if response.Err != nil {
-		utils.RespondError(w, response.StatusCode, response.Err, response.Message)
+	if err != nil {
+		utils.RespondError(w, statusCode, err, "failed to create asset")
 		return
 	}
 
-	utils.RespondJSON(w, response.StatusCode, struct {
+	utils.RespondJSON(w, statusCode, struct {
 		Message string `json:"message"`
 	}{
-		Message: "asset created successfully",
+		Message: message,
 	})
 }
 
 func GetAssets(w http.ResponseWriter, r *http.Request) {
 
-	response := services.GetAssets()
+	assets, statusCode, message, err := services.GetAssets()
 
-	if response.Err != nil {
-		utils.RespondError(w, response.StatusCode, response.Err, "failed to fetch assets")
+	if err != nil {
+		utils.RespondError(w, statusCode, err, "failed to fetch assets")
 		return
 	}
 
-	utils.RespondJSON(w, response.StatusCode, struct {
+	utils.RespondJSON(w, statusCode, struct {
 		Message string      `json:"message"`
 		Data    interface{} `json:"data"`
 	}{
-		Message: "assets fetched successfully",
-		Data:    response.Data,
+		Message: message,
+		Data:    assets,
 	})
 }
 
@@ -51,25 +51,25 @@ func GetAssetByID(w http.ResponseWriter, r *http.Request) {
 
 	assetID := r.PathValue("assetID")
 
-	response := services.GetAssetByID(assetID)
+	asset, statusCode, message, err := services.GetAssetByID(assetID)
 
-	if response.Err != nil {
-		utils.RespondError(w, response.StatusCode, response.Err, response.Message)
+	if err != nil {
+		utils.RespondError(w, statusCode, err, message)
 		return
 	}
 
-	utils.RespondJSON(w, response.StatusCode, struct {
+	utils.RespondJSON(w, statusCode, struct {
 		Message string      `json:"message"`
 		Data    interface{} `json:"data"`
 	}{
 		Message: "asset fetched successfully",
-		Data:    response.Data,
+		Data:    asset,
 	})
 }
 
 func UpdateAsset(w http.ResponseWriter, r *http.Request) {
 
-	var body models.UpdateAssetRequest
+	var body *models.UpdateAssetRequest
 
 	if parseErr := utils.ParseBody(r, &body); parseErr != nil {
 		utils.RespondError(w, http.StatusBadRequest, parseErr, "failed to parse request body")
@@ -78,17 +78,43 @@ func UpdateAsset(w http.ResponseWriter, r *http.Request) {
 
 	assetID := r.PathValue("assetID")
 
-	response := services.UpdateAsset(assetID, body)
+	statusCode, message, err := services.UpdateAsset(assetID, body)
 
-	if response.Err != nil {
-		utils.RespondError(w, response.StatusCode, response.Err, response.Message)
+	if err != nil {
+		utils.RespondError(w, statusCode, err, message)
 		return
 	}
+
+	utils.RespondJSON(w, statusCode, struct {
+		Message string `json:"message"`
+	}{
+		Message: "asset updated successfully",
+	})
+}
+
+func AssetSentToRepair(w http.ResponseWriter, r *http.Request) {
+
+	assetID := r.PathValue("assetID")
+
+	response := services.AssetSentToRepair(assetID)
 
 	utils.RespondJSON(w, response.StatusCode, struct {
 		Message string `json:"message"`
 	}{
-		Message: "asset updated successfully",
+		Message: "asset repair request sent successfully",
+	})
+}
+
+func AssetRepairCompleted(w http.ResponseWriter, r *http.Request) {
+
+	assetID := r.PathValue("assetID")
+
+	response := services.AssetRepairCompleted(assetID)
+
+	utils.RespondJSON(w, response.StatusCode, struct {
+		Message string `json:"message"`
+	}{
+		Message: "asset repair status updated successfully",
 	})
 }
 
@@ -96,14 +122,14 @@ func DeleteAsset(w http.ResponseWriter, r *http.Request) {
 
 	assetID := r.PathValue("assetID")
 
-	response := services.DeleteAsset(assetID)
+	err, statusCode, message := services.DeleteAsset(assetID)
 
-	if response.Err != nil {
-		utils.RespondError(w, response.StatusCode, response.Err, response.Message)
+	if err != nil {
+		utils.RespondError(w, statusCode, err, message)
 		return
 	}
 
-	utils.RespondJSON(w, response.StatusCode, struct {
+	utils.RespondJSON(w, statusCode, struct {
 		Message string `json:"message"`
 	}{
 		Message: "asset deleted successfully",

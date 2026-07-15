@@ -52,9 +52,6 @@
         archived_at TIMESTAMPTZ
     );
 
-    CREATE UNIQUE INDEX idx_user_email
-        ON users (email)
-        WHERE archived_at IS NULL;
 
     CREATE TABLE IF NOT EXISTS assets
     (
@@ -122,11 +119,6 @@
         archived_at   TIMESTAMPTZ
     );
 
-    CREATE UNIQUE INDEX idx_active_assignment
-        ON asset_assignments (asset_id)
-        WHERE returned_at IS NULL
-            AND archived_at IS NULL;
-
     CREATE TABLE asset_repairs
     (
         repair_id           UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
@@ -137,10 +129,5 @@
         updated_at          TIMESTAMPTZ,
         archived_at         TIMESTAMPTZ
     );
-
-    CREATE UNIQUE INDEX idx_active_repair
-        ON asset_repairs (asset_id)
-        WHERE repair_completed_on IS NULL
-            AND archived_at IS NULL;
 
     COMMIT;

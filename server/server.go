@@ -32,6 +32,7 @@ func SetUpRoutes() *Server {
 	mux.HandleFunc("POST /v1/login", handlers.LoginUser)
 
 	mux.Handle("GET /v1/profile", protectedWithRoles(handlers.GetUser, "admin", "project_manager", "employee"))
+	mux.Handle("GET /v1/my-assets", protectedWithRoles(handlers.GetUserAssetByID, "admin", "project_manager", "employee"))
 	mux.Handle("POST /v1/logout", protectedWithRoles(handlers.LogoutUser, "admin", "project_manager", "employee"))
 	mux.Handle("DELETE /v1/delete", protectedWithRoles(handlers.DeleteUser, "admin", "project_manager", "employee"))
 
@@ -39,6 +40,8 @@ func SetUpRoutes() *Server {
 	mux.Handle("GET /v1/assets", protectedWithRoles(handlers.GetAssets, "admin", "project_manager"))
 	mux.Handle("GET /v1/assets/{assetID}", protectedWithRoles(handlers.GetAssetByID, "admin", "project_manager"))
 	mux.Handle("PUT /v1/assets/{assetID}", protectedWithRoles(handlers.UpdateAsset, "admin"))
+	mux.Handle("POST /v1/assets/{assetID}/repair", protectedWithRoles(handlers.AssetSentToRepair, "admin"))
+	mux.Handle("POST /v1/assets/{assetID}/repaired", protectedWithRoles(handlers.AssetRepairCompleted, "admin"))
 	mux.Handle("DELETE /v1/assets/{assetID}", protectedWithRoles(handlers.DeleteAsset, "admin"))
 
 	mux.Handle("POST /v1/assets/assign", protectedWithRoles(handlers.AssignAsset, "admin", "project_manager"))
