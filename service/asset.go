@@ -4,8 +4,6 @@ import (
 	"AssetTrack/database"
 	"AssetTrack/models"
 	"AssetTrack/repository"
-	"database/sql"
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -148,23 +146,29 @@ func UpdateAsset(assetID string, body models.UpdateAssetRequest) (int, string, e
 		switch assetType {
 
 		case "laptop":
-			if err := repository.UpdateLaptopSpecs(tx, assetID, body.Laptop); err != nil {
-				return fmt.Errorf("failed to update laptop specs: %w", err)
+			if body.Laptop != nil {
+				if err := repository.UpdateLaptopSpecs(tx, assetID, *body.Laptop); err != nil {
+					return err
+				}
 			}
 
 		case "keyboard":
-			if err := repository.UpdateKeyboardSpecs(tx, assetID, body.Keyboard); err != nil {
-				return fmt.Errorf("failed to update keyboard specs: %w", err)
+			if body.Keyboard != nil {
+				if err := repository.UpdateKeyboardSpecs(tx, assetID, *body.Keyboard); err != nil {
+					return err
+				}
 			}
-
 		case "mouse":
-			if err := repository.UpdateMouseSpecs(tx, assetID, body.Mouse); err != nil {
-				return fmt.Errorf("failed to update mouse specs: %w", err)
+			if body.Mouse != nil {
+				if err := repository.UpdateMouseSpecs(tx, assetID, *body.Mouse); err != nil {
+					return err
+				}
 			}
-
 		case "mobile":
-			if err := repository.UpdateMobileSpecs(tx, assetID, body.Mobile); err != nil {
-				return fmt.Errorf("failed to update mobile specs: %w", err)
+			if body.Mobile != nil {
+				if err := repository.UpdateMobileSpecs(tx, assetID, *body.Mobile); err != nil {
+					return err
+				}
 			}
 
 		default:
@@ -198,11 +202,6 @@ func DeleteAsset(assetID string) (error, int, string) {
 	})
 
 	if txErr != nil {
-
-		if errors.Is(txErr, sql.ErrNoRows) {
-			return txErr, http.StatusNotFound, "asset not found"
-		}
-
 		return txErr, http.StatusInternalServerError, "failed to delete asset"
 	}
 
@@ -211,16 +210,7 @@ func DeleteAsset(assetID string) (error, int, string) {
 
 func AssetSentToRepair(assetID string) (error, int, string) {
 
-	userID, err := repository.GetAssignedUser(assetID)
-	if err != nil {
-		return err, http.StatusInternalServerError, "failed to get assigned user"
-	}
-
 	txErr := database.Tx(func(tx *sqlx.Tx) error {
-
-		if err := repository.ReturnUserAsset(tx, assetID, userID); err != nil {
-			return fmt.Errorf("failed to return asset: %w", err)
-		}
 
 		if err := repository.AssetSentToRepair(tx, assetID); err != nil {
 			return fmt.Errorf("failed to create repair record: %w", err)
@@ -234,11 +224,6 @@ func AssetSentToRepair(assetID string) (error, int, string) {
 	})
 
 	if txErr != nil {
-
-		if errors.Is(txErr, sql.ErrNoRows) {
-			return txErr, http.StatusNotFound, "asset assignment not found"
-		}
-
 		return txErr, http.StatusInternalServerError, "failed to send asset for repair"
 	}
 
@@ -265,4 +250,15 @@ func AssetRepairCompleted(assetID string) (error, int, string) {
 	}
 
 	return nil, http.StatusOK, "asset repair status updated"
+}
+
+func AdminDashboard() (models.Dashboard, int, string, error) {
+
+	dashboard, err := repository.AdminDashboard()
+
+	if err != nil {
+		return models.Dashboard{}, http.StatusInternalServerError, "failed to fetch data", err
+	}
+
+	return dashboard, http.StatusOK, "dashboard data fetched successfully", err
 }

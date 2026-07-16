@@ -68,29 +68,21 @@ func GetUserContext(r *http.Request) models.UserContext {
 	return r.Context().Value(userContext).(models.UserContext)
 }
 
-func RequireRoles(roles ...string) func(http.Handler) http.Handler {
+func RequireRoles(next http.Handler, roles ...string) http.Handler {
 
-	return func(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := GetUserContext(r)
 
-			user := GetUserContext(r)
+		for _, role := range roles {
 
-			allowed := false
-
-			for _, role := range roles {
-				if role == user.Role {
-					allowed = true
-					break
-				}
-			}
-
-			if !allowed {
-				utils.RespondError(w, http.StatusForbidden, nil, "access denied")
+			if user.Role == role {
+				next.ServeHTTP(w, r)
 				return
 			}
+		}
 
-			next.ServeHTTP(w, r)
-		})
-	}
+		utils.RespondError(w, http.StatusForbidden, nil, "access denied")
+	})
+
 }

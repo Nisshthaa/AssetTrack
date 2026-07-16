@@ -72,6 +72,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 	utils.RespondJSON(w, statusCode, user)
 }
+
 func GetUserAssets(w http.ResponseWriter, r *http.Request) {
 	userCtx := middlewares.GetUserContext(r)
 
@@ -93,27 +94,4 @@ func GetUserAssetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	utils.RespondJSON(w, statusCode, assets)
-}
-
-func LogoutUser(w http.ResponseWriter, r *http.Request) {
-
-	utils.RespondJSON(w, http.StatusOK, struct {
-		Message string `json:"message"`
-	}{"logout successful"})
-}
-
-func DeleteUser(w http.ResponseWriter, r *http.Request) {
-	userCtx := middlewares.GetUserContext(r)
-
-	status, message, err := services.DeleteUser(userCtx.UserID)
-	if err != nil {
-		utils.RespondError(w, status, err, message)
-		return
-	}
-
-	utils.RespondJSON(w, status, struct {
-		Message string `json:"message"`
-	}{
-		Message: "account deleted successfully",
-	})
 }

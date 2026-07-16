@@ -135,3 +135,21 @@ func DeleteAsset(w http.ResponseWriter, r *http.Request) {
 		Message: "asset deleted successfully",
 	})
 }
+
+func AdminDashboard(w http.ResponseWriter, r *http.Request) {
+
+	dashboard, statusCode, message, err := services.AdminDashboard()
+
+	if err != nil {
+		utils.RespondError(w, statusCode, err, "failed to fetch assets")
+		return
+	}
+
+	utils.RespondJSON(w, statusCode, struct {
+		Message string      `json:"message"`
+		Data    interface{} `json:"data"`
+	}{
+		Message: message,
+		Data:    dashboard,
+	})
+}

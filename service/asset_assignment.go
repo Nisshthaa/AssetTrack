@@ -71,3 +71,13 @@ func ReturnAsset(body models.AssignAssetRequest) (error, int, string) {
 
 	return nil, http.StatusOK, "asset returned successfully"
 }
+
+func GetAssetHistory(assetID string) ([]models.AssetHistory, int, string, error) {
+
+	history, err := repository.GetAssetHistory(assetID)
+	if err != nil {
+		return nil, http.StatusInternalServerError, "failed to get asset history", err
+	}
+
+	return history, http.StatusOK, "asset history fetched successfully", nil
+}

@@ -140,28 +140,3 @@ func GetUserAssetByID(userID, assetID string) (models.AssetDetails, int, string,
 
 	return asset, http.StatusOK, "asset fetched successfully", nil
 }
-
-func DeleteUser(userID string) (int, string, error) {
-	txErr := database.Tx(func(tx *sqlx.Tx) error {
-
-		assetID, returnErr := repository.ReturnUserAssets(tx, userID)
-		if returnErr != nil {
-			return fmt.Errorf("failed to delete user: %w", returnErr)
-		}
-
-		if updateErr := repository.UpdateAssetStatus(tx, assetID, "available"); updateErr != nil {
-			return fmt.Errorf("failed to update asset status: %w", updateErr)
-		}
-
-		if delErr := repository.DeleteUser(tx, userID); delErr != nil {
-			return fmt.Errorf("failed to delete user: %w", delErr)
-		}
-
-		return nil
-	})
-
-	if txErr != nil {
-		return http.StatusInternalServerError, "transaction failed", txErr
-	}
-	return http.StatusOK, "user deleted successfully", nil
-}
