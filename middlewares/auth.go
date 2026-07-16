@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"AssetTrack/models"
 	"AssetTrack/utils"
 	"context"
 	"net/http"
@@ -10,27 +11,24 @@ import (
 	"github.com/pkg/errors"
 )
 
-type ContextKey string
+type ContextKeys string
 
-const UserContextKey ContextKey = "user"
+const (
+	userContext ContextKeys = "userContext"
+)
 
 func Authenticate(next http.Handler) http.Handler {
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		tokenString := r.Header.Get("x-api-key")
-
-		if tokenString == "" {
-			utils.RespondError(w, http.StatusUnauthorized, nil, "token missing")
+		apiKey := r.Header.Get("x-api-key")
+		if apiKey == "" {
+			utils.RespondError(w, http.StatusUnauthorized, nil, "token header missing")
 			return
 		}
 
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-
+		token, err := jwt.Parse(apiKey, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, errors.New("invalid signing method")
 			}
-
 			return []byte(os.Getenv("JWT_SECRET_KEY")), nil
 		})
 
@@ -39,33 +37,35 @@ func Authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		claims := token.Claims.(jwt.MapClaims)
-
-		user := models.UserContext{
-			UserID: claims["userId"].(string),
-			Role:   claims["role"].(string),
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			utils.RespondError(w, http.StatusUnauthorized, nil, "invalid token claims")
+			return
 		}
 
-		ctx := context.WithValue(r.Context(), UserContextKey, user)
+		userID, ok := claims["userId"].(string)
+		if !ok {
+			utils.RespondError(w, http.StatusUnauthorized, nil, "invalid token claims")
+			return
+		}
 
-<<<<<<< Updated upstream
-		ctx := context.WithValue(r.Context(), userContext, userID)
+		role, ok := claims["role"].(string)
+		if !ok {
+			utils.RespondError(w, http.StatusUnauthorized, nil, "invalid token claims")
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), userContext, models.UserContext{
+			UserID: userID,
+			Role:   role,
+		})
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
 	})
 }
-func UserContext(r *http.Request) (string, bool) {
-	userID, ok := r.Context().Value(userContext).(string)
-	return userID, ok
-=======
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
 func GetUserContext(r *http.Request) models.UserContext {
-
-	return r.Context().Value(UserContextKey).(models.UserContext)
+	return r.Context().Value(userContext).(models.UserContext)
 }
 
 func RequireRoles(next http.Handler, roles ...string) http.Handler {
@@ -84,5 +84,5 @@ func RequireRoles(next http.Handler, roles ...string) http.Handler {
 
 		utils.RespondError(w, http.StatusForbidden, nil, "access denied")
 	})
->>>>>>> Stashed changes
+
 }

@@ -18,3 +18,8 @@ type LoginData struct {
 	UserID       string `db:"user_id"`
 	PasswordHash string `db:"password"`
 }
+
+type UserContext struct {
+	UserID string
+	Role   string
+}
