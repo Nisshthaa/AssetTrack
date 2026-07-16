@@ -24,6 +24,28 @@ func SetUpRoutes() *Server {
 	mux.HandleFunc("POST /v1/register", handlers.RegisterUser)
 	mux.HandleFunc("POST /v1/login", handlers.LoginUser)
 
+<<<<<<< Updated upstream
+=======
+	mux.Handle("GET /v1/profile", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.GetUser), "admin", "project_manager", "employee")))
+	mux.Handle("GET /v1/my-assets", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.GetUserAssets), "employee")))
+	mux.Handle("GET /v1/my-asset", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.GetUserAssetByID), "employee")))
+	mux.Handle("POST /v1/logout", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.LogoutUser), "admin", "project_manager", "employee")))
+	mux.Handle("DELETE /v1/delete", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.DeleteUser), "admin", "project_manager", "employee")))
+
+	mux.Handle("POST /v1/assets", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.CreateAsset), "admin")))
+	mux.Handle("GET /v1/assets", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.GetAssets), "admin", "project_manager")))
+	mux.Handle("GET /v1/assets/{assetID}", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.GetAssetByID), "admin", "project_manager")))
+	mux.Handle("PUT /v1/assets/{assetID}", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.UpdateAsset), "admin")))
+	mux.Handle("POST /v1/assets/{assetID}/repair", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.AssetSentToRepair), "admin")))
+	mux.Handle("POST /v1/assets/{assetID}/repaired", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.AssetRepairCompleted), "admin")))
+	mux.Handle("DELETE /v1/assets/{assetID}", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.DeleteAsset), "admin")))
+
+	mux.Handle("POST /v1/assets/assign", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.AssignAsset), "admin", "project_manager")))
+	mux.Handle("PUT /v1/assets/return", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.ReturnAsset), "admin", "project_manager")))
+
+	mux.Handle("GET /v1/dashboard", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.AdminDashboard), "admin")))
+
+>>>>>>> Stashed changes
 	return &Server{
 		router: mux,
 	}
