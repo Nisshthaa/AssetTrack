@@ -50,7 +50,7 @@ func GetUserByPassword(body models.LoginRequest) (models.LoginData, error) {
 func GetUser(userID string) (models.User, error) {
 	var user models.User
 
-	SQL := `SELECT user_id, name, email , phone_no, role, type
+	SQL := `SELECT user_id, name, email , phone_no, role, type,created_at
             FROM users 
             WHERE user_id = $1
             AND archived_at IS NULL`

@@ -25,9 +25,9 @@ func SetUpRoutes() *Server {
 	mux.HandleFunc("POST /v1/register", handlers.RegisterUser)
 	mux.HandleFunc("POST /v1/login", handlers.LoginUser)
 
-	mux.Handle("GET /v1/profile", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.GetUser), "admin", "project_manager", "employee")))
-	mux.Handle("GET /v1/my-assets", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.GetUserAssets), "employee")))
-	mux.Handle("GET /v1/my-asset", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.GetUserAssetByID), "employee")))
+	mux.Handle("GET /v1/user/profile", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.GetUser), "admin", "project_manager", "employee")))
+	mux.Handle("GET /v1/user/my-assets", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.GetUserAssets), "employee")))
+	mux.Handle("GET /v1/user/my-asset", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.GetUserAssetByID), "employee")))
 
 	mux.Handle("POST /v1/assets", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.CreateAsset), "admin")))
 	mux.Handle("GET /v1/assets", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.GetAssets), "admin", "project_manager")))

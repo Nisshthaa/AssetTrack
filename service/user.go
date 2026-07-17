@@ -25,7 +25,7 @@ func RegisterUser(body models.RegisterUser) (string, int, error) {
 	}
 
 	if exists {
-		return "user already exists", http.StatusBadRequest, nil
+		return "user already exists", http.StatusConflict, fmt.Errorf("user with email %s already exists", body.Email)
 	}
 
 	hashedPassword, hashErr := utils.HashPassword(body.Password)
