@@ -4,6 +4,7 @@ import (
 	"AssetTrack/database"
 	"AssetTrack/server"
 	"errors"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -30,26 +31,27 @@ func main() {
 		logrus.Panicf("failed to initialize and migrate database with error: %+v", err)
 	}
 
-	logrus.Print("migration successful")
+	log.Print("migration successful")
 
 	go func() {
 		if serverErr := srv.Run(":8080"); serverErr != nil && !errors.Is(serverErr, http.ErrServerClosed) {
-			logrus.Panicf("Failed to run server with error: %+v", serverErr)
+			log.Panicf("Failed to run server with error: %+v", serverErr)
 		}
 	}()
 
-	logrus.Print("server started at :8080")
+	log.Print("server started at :8080")
 
 	<-done
 
-	logrus.Info("shutting down server")
-
-	if dbCloseErr := database.ShutdownDatabase(); dbCloseErr != nil {
-		logrus.WithError(dbCloseErr).Error("failed to close database connection")
-	}
+	log.Println("shutting down server")
 
 	if serverCloseErr := srv.Shutdown(shutDownTimeOut); serverCloseErr != nil {
-		logrus.WithError(serverCloseErr).Panic("failed to gracefully shutdown server")
+		log.Panicf("failed to gracefully shutdown server: %v", serverCloseErr)
 	}
+
+	if dbCloseErr := database.ShutdownDatabase(); dbCloseErr != nil {
+		log.Println("failed to close database connection:", dbCloseErr)
+	}
+
 
 }

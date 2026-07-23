@@ -10,7 +10,7 @@ import (
 
 func IsUserExists(email string) (bool, error) {
 	SQL := `SELECT count(user_id) > 0 as is_exist
-			  FROM users
+			  FROM users	
 			  WHERE email = TRIM($1)
 			  AND archived_at IS NULL`
 
@@ -74,7 +74,6 @@ func GetUserAssets(userID string) ([]models.AssetDetails, error) {
 	err := database.DB.Select(&assets, SQL, userID)
 	return assets, err
 }
-
 func GetUserAssetByID(tx *sqlx.Tx, userID, assetID string) (models.AssetDetails, error) {
 	var asset models.AssetDetails
 

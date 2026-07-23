@@ -16,7 +16,11 @@ func AssignAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, statusCode, message := services.AssignAsset(body)
+	err, statusCode, message := services.AssignAsset(body)
+	if err != nil {
+		utils.RespondError(w, statusCode, err, "failed to assign assets")
+		return
+	}
 
 	utils.RespondJSON(w, statusCode, struct {
 		Message string `json:"message"`
@@ -34,7 +38,11 @@ func ReturnAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, statusCode, message := services.ReturnAsset(body)
+	err, statusCode, message := services.ReturnAsset(body)
+	if err != nil {
+		utils.RespondError(w, statusCode, err, "failed to return assets")
+		return
+	}
 
 	utils.RespondJSON(w, statusCode, struct {
 		Message string `json:"message"`

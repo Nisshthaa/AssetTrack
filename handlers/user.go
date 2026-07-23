@@ -3,7 +3,7 @@ package handlers
 import (
 	"AssetTrack/middlewares"
 	"AssetTrack/models"
-	services "AssetTrack/service"
+	"AssetTrack/service"
 	"AssetTrack/utils"
 	"net/http"
 )

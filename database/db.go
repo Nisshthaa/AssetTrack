@@ -3,13 +3,13 @@ package database
 import (
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	"github.com/sirupsen/logrus"
 )
 
 var DB *sqlx.DB
@@ -63,12 +63,12 @@ func Tx(fn func(tx *sqlx.Tx) error) error {
 	defer func() {
 		if err != nil {
 			if rollBackErr := tx.Rollback(); rollBackErr != nil {
-				logrus.Errorf("failed to rollback tx: %s", rollBackErr)
+				log.Printf("failed to rollback tx: %s", rollBackErr)
 			}
 			return
 		}
 		if commitErr := tx.Commit(); commitErr != nil {
-			logrus.Errorf("failed to commit tx: %s", commitErr)
+			log.Printf("failed to commit tx: %s", commitErr)
 		}
 	}()
 	err = fn(tx)

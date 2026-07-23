@@ -96,7 +96,11 @@ func AssetSentToRepair(w http.ResponseWriter, r *http.Request) {
 
 	assetID := r.PathValue("assetID")
 
-	_, statusCode, message := services.AssetSentToRepair(assetID)
+	err, statusCode, message := services.AssetSentToRepair(assetID)
+	if err != nil {
+		utils.RespondError(w, statusCode, err, "failed to insert asset as sentForRepair")
+		return
+	}
 
 	utils.RespondJSON(w, statusCode, struct {
 		Message string `json:"message"`
@@ -109,7 +113,11 @@ func AssetRepairCompleted(w http.ResponseWriter, r *http.Request) {
 
 	assetID := r.PathValue("assetID")
 
-	_, statusCode, message := services.AssetRepairCompleted(assetID)
+	err, statusCode, message := services.AssetRepairCompleted(assetID)
+	if err != nil {
+		utils.RespondError(w, statusCode, err, "failed to insert asset as repairCompleted")
+		return
+	}
 
 	utils.RespondJSON(w, statusCode, struct {
 		Message string `json:"message"`

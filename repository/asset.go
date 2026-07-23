@@ -152,6 +152,7 @@ func GetMobileSpecifications(tx *sqlx.Tx, assetID string) (models.MobileSpecsReq
 
 	return mobile, nil
 }
+
 func UpdateAsset(tx *sqlx.Tx, assetID string, body models.UpdateAssetRequest) (string, error) {
 	var assetType string
 
@@ -253,21 +254,18 @@ func ArchiveAssetAssignment(tx *sqlx.Tx, assetID string) error {
 	SQL := `UPDATE asset_assignments
 		SET archived_at = CURRENT_TIMESTAMP
 		WHERE asset_id = $1
-			AND archived_at IS NULL;
-	`
+			AND archived_at IS NULL;`
 
 	_, err := tx.Exec(SQL, assetID)
 	return err
 }
 
 func AssetSentToRepair(tx *sqlx.Tx, assetID string) error {
-	SQL := `UPDATE asset_repairs
-			SET sent_for_repair_on=NOW(),updated_at=NOW()
-			WHERE asset_id=$1
-			AND archived_at is NULL`
+
+	SQL := `INSERT INTO asset_repairs(asset_id)
+			VALUES ($1)`
 
 	_, err := tx.Exec(SQL, assetID)
-
 	return err
 }
 

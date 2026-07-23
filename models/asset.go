@@ -11,28 +11,27 @@ type AssetRequest struct {
 	OwnerType     string               `json:"owner" validate:"required,oneof=client remotestate"`
 	WarrantyStart time.Time            `json:"warrantyStart"  `
 	WarrantyEnd   time.Time            `json:"warrantyEnd" `
-	Laptop        LaptopSpecsRequest   `json:"laptopSpecs,omitempty"`
-	Keyboard      KeyboardSpecsRequest `json:"keyboardSpecs,omitempty"`
-	Mouse         MouseSpecsRequest    `json:"mouseSpecs,omitempty"`
-	Mobile        MobileSpecsRequest   `json:"mobileSpecs,omitempty"`
+	Laptop        LaptopSpecsRequest   `json:"laptopSpecs"`
+	Keyboard      KeyboardSpecsRequest `json:"keyboardSpecs"`
+	Mouse         MouseSpecsRequest    `json:"mouseSpecs"`
+	Mobile        MobileSpecsRequest   `json:"mobileSpecs"`
 }
 
 type AssetDetails struct {
-	AssetID       string    `json:"assetID" db:"asset_id"`
-	SerialNumber  string    `json:"serialNumber" db:"serial_number"`
-	Brand         string    `json:"brand" db:"brand"`
-	Model         string    `json:"model" db:"model"`
-	AssetType     string    `json:"assetType" db:"asset_type"`
-	Status        string    `json:"status" db:"status"`
-	OwnerType     string    `json:"owner" db:"owner_type"`
-	AssignedTo    string    `json:"assignedTo" db:"assigned_to"`
-	WarrantyStart time.Time `json:"warrantyStart" db:"warranty_start" `
-	WarrantyEnd   time.Time `json:"warrantyEnd" db:"warranty_end"`
-
-	Laptop   *LaptopSpecsRequest   `json:"laptopSpecs,omitempty"`
-	Keyboard *KeyboardSpecsRequest `json:"keyboardSpecs,omitempty"`
-	Mouse    *MouseSpecsRequest    `json:"mouseSpecs,omitempty"`
-	Mobile   *MobileSpecsRequest   `json:"mobileSpecs,omitempty"`
+	AssetID       string                `json:"assetID" db:"asset_id"`
+	SerialNumber  string                `json:"serialNumber" db:"serial_number"`
+	Brand         string                `json:"brand" db:"brand"`
+	Model         string                `json:"model" db:"model"`
+	AssetType     string                `json:"assetType" db:"asset_type"`
+	Status        string                `json:"status" db:"status"`
+	OwnerType     string                `json:"owner" db:"owner_type"`
+	AssignedTo    string                `json:"assignedTo" db:"assigned_to"`
+	WarrantyStart time.Time             `json:"warrantyStart" db:"warranty_start" `
+	WarrantyEnd   time.Time             `json:"warrantyEnd" db:"warranty_end"`
+	Laptop        *LaptopSpecsRequest   `json:"laptopSpecs,omitempty"`
+	Keyboard      *KeyboardSpecsRequest `json:"keyboardSpecs,omitempty"`
+	Mouse         *MouseSpecsRequest    `json:"mouseSpecs,omitempty"`
+	Mobile        *MobileSpecsRequest   `json:"mobileSpecs,omitempty"`
 }
 type LaptopSpecsRequest struct {
 	Processor       *string `json:"processor" db:"processor"`
