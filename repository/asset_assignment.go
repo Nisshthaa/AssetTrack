@@ -21,7 +21,7 @@ func UpdateAssetStatus(tx *sqlx.Tx, assetID, status string) error {
 	SQL := `UPDATE assets
 		SET status = $1,
 			updated_at = CURRENT_TIMESTAMP
-		WHERE asset_id = $2
+		WHERE id = $2
 			AND archived_at IS NULL;`
 
 	_, err := tx.Exec(SQL, status, assetID)
@@ -54,10 +54,10 @@ func GetAssetHistory(assetID string) ([]models.AssetHistory, error) {
 
 	var history []models.AssetHistory
 
-	SQL := `SELECT a.asset_id,a.asset_type,a.brand,a.model,u.user_id,u.name,aa.assigned_on,aa.returned_at
+	SQL := `SELECT a.id,a.asset_type,a.brand,a.model,u.id,u.name,aa.assigned_on,aa.returned_at
 			FROM assets a 
-			JOIN asset_assignments aa ON a.asset_id=aa.asset_id
-    		JOIN users u ON u.user_id=aa.assigned_to 
+			JOIN asset_assignments aa ON a.id=aa.asset_id
+    		JOIN users u ON u.id=aa.assigned_to 
 			WHERE aa.asset_id=$1
 			AND aa.archived_at IS NULL
 			AND a.archived_at IS NULL

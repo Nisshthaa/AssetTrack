@@ -10,8 +10,6 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/sirupsen/logrus"
 )
 
 const shutDownTimeOut = 10 * time.Second
@@ -28,7 +26,7 @@ func main() {
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_NAME")); err != nil {
-		logrus.Panicf("failed to initialize and migrate database with error: %+v", err)
+		log.Panicf("failed to initialize and migrate database with error: %+v", err)
 	}
 
 	log.Print("migration successful")
@@ -52,6 +50,5 @@ func main() {
 	if dbCloseErr := database.ShutdownDatabase(); dbCloseErr != nil {
 		log.Println("failed to close database connection:", dbCloseErr)
 	}
-
 
 }

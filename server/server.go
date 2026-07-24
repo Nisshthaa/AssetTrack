@@ -28,7 +28,6 @@ func SetUpRoutes() *Server {
 
 	mux.Handle("GET /v1/user/profile", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.GetUser), "admin", "project-manager", "employee")))
 	mux.Handle("GET /v1/user/my-assets", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.GetUserAssets), "employee")))
-	mux.Handle("GET /v1/user/my-asset", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.GetUserAssetByID), "employee")))
 
 	mux.Handle("POST /v1/assets", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.CreateAsset), "admin")))
 	mux.Handle("GET /v1/assets", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.GetAssets), "admin", "project-manager")))
@@ -45,7 +44,7 @@ func SetUpRoutes() *Server {
 	mux.Handle("GET /v1/dashboard", middlewares.Authenticate(middlewares.RequireRoles(http.HandlerFunc(handlers.AdminDashboard), "admin")))
 
 	return &Server{
-		router: mux,
+		router: middlewares.CommonMiddlewares(mux),
 	}
 }
 

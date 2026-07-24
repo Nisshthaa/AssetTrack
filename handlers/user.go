@@ -83,15 +83,3 @@ func GetUserAssets(w http.ResponseWriter, r *http.Request) {
 	}
 	utils.RespondJSON(w, statusCode, assets)
 }
-
-func GetUserAssetByID(w http.ResponseWriter, r *http.Request) {
-	userCtx := middlewares.GetUserContext(r)
-	assetID := r.PathValue("assetID")
-
-	assets, statusCode, message, err := services.GetUserAssetByID(userCtx.UserID, assetID)
-	if err != nil {
-		utils.RespondError(w, statusCode, err, message)
-		return
-	}
-	utils.RespondJSON(w, statusCode, assets)
-}

@@ -190,12 +190,39 @@ func DeleteAsset(assetID string) (error, int, string) {
 
 	txErr := database.Tx(func(tx *sqlx.Tx) error {
 
-		if err := repository.ArchiveAsset(tx, assetID); err != nil {
+		assetType, err := repository.ArchiveAsset(tx, assetID)
+		if err != nil {
 			return fmt.Errorf("failed to archive asset: %w", err)
 		}
 
 		if err := repository.ArchiveAssetAssignment(tx, assetID); err != nil {
 			return fmt.Errorf("failed to archive asset assignments: %w", err)
+		}
+
+		switch assetType {
+
+		case "laptop":
+			if err := repository.ArchiveLaptopSpecs(tx, assetID); err != nil {
+				return err
+			}
+
+		case "keyboard":
+			if err := repository.ArchiveKeyboardSpecs(tx, assetID); err != nil {
+				return err
+			}
+
+		case "mouse":
+			if err := repository.ArchiveMouseSpecs(tx, assetID); err != nil {
+				return err
+			}
+
+		case "mobile":
+			if err := repository.ArchiveMobileSpecs(tx, assetID); err != nil {
+				return err
+			}
+
+		default:
+			return fmt.Errorf("unsupported asset type: %s", assetType)
 		}
 
 		return nil
